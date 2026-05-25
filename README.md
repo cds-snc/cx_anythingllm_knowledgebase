@@ -1,142 +1,142 @@
-# CX AnythingLLM Knowledge Base
+# CX Knowledge Base
 
-RAG-based research corpus using [AnythingLLM](https://anythingllm.com/), running locally in Docker. Zero network exposure. Corpus syncs via GitHub Releases.
-
-## Stack
-
-| Layer | Choice | Why |
-|---|---|---|
-| LLM | Azure OpenAI `gpt-4o` | CDS-managed endpoint, enterprise key |
-| Embedder | Native (local) | Runs in container, no API cost |
-| Vector DB | LanceDB (built-in) | Zero external dependency, portable |
-| Chat Mode | **Query** (document-only) | Prevents hallucination |
-
-See [docs/distribution-strategy.md](docs/distribution-strategy.md) for the full team-distribution plan.
+A local AI assistant pre-loaded with native plants documentation for British Columbia. Ask it questions and it answers only from the embedded documents — no hallucinations, no internet, no general knowledge drift.
 
 ---
 
-## Teammate Install (3 steps)
+## Quick Start (non-technical)
 
-**Prerequisites:** Docker Desktop or Colima, an Azure OpenAI API key (get from 1Password: `Azure OpenAI API key - Jesse's Key`).
+**What you need before starting:**
+- Docker Desktop installed and running
+- Your Azure OpenAI API key (ask your team lead)
+- Git
+
+**Steps:**
+
+1. **Download the project**
+   Open Terminal and run:
+   ```
+   git clone https://github.com/cds-snc/cx_anythingllm_knowledgebase.git
+   cd cx_anythingllm_knowledgebase
+   ```
+
+2. **Create your config file**
+   ```
+   cp .env.example .env
+   ```
+   Open `.env` in any text editor. Fill in these three lines with your credentials:
+   ```
+   AZURE_OPENAI_KEY=your-key-here
+   AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
+   ```
+   Save and close the file.
+
+3. **Install the knowledge base**
+   ```
+   bash scripts/install.sh
+   ```
+   This downloads the app, loads the pre-embedded document library, and starts everything. Takes about 2–3 minutes the first time.
+
+4. **Open the assistant**
+   Go to [http://localhost:3001](http://localhost:3001) in your browser.
+   - Create an account when prompted (this is local to your machine)
+   - Select the **CX Knowledge Base** workspace
+   - Type your question and press Enter
+
+5. **Stop the assistant when done**
+   ```
+   docker-compose down
+   ```
+   Your data is saved — next time just run `docker-compose up -d` to restart.
+
+**To get the latest document updates:**
+```
+bash scripts/update.sh
+```
+
+---
+
+## What's happening under the hood
+
+The assistant is [AnythingLLM](https://anythingllm.com) running locally in Docker. When you ask a question:
+
+1. Your question is converted to a vector (a numerical fingerprint) by a small model running inside the container — no API call, no cost.
+2. That vector is compared against the pre-embedded document library using LanceDB, a file-based vector database stored in `./storage/`.
+3. The most relevant passages from the documents are retrieved and sent, along with your question, to **Azure OpenAI gpt-4o** (your org's CDS endpoint).
+4. gpt-4o synthesises an answer using only those passages. The workspace is in **Query mode**, which means it will say "I don't know" rather than guess if the answer isn't in the documents.
+
+Everything except the final LLM call runs locally. The document vectors never leave your machine.
+
+---
+
+## Technical reference
+
+### Stack
+
+| Component | Technology |
+|-----------|------------|
+| App | AnythingLLM v1.12+ (Docker) |
+| LLM | Azure OpenAI gpt-4o (CDS org endpoint) |
+| Embedder | Xenova/all-MiniLM-L6-v2 (native, in-container) |
+| Vector DB | LanceDB (file-based, `./storage/lancedb/`) |
+| Transcription | Whisper (local) |
+| Database | SQLite (`./storage/anythingllm.db`) |
+
+### Corpus
+
+21 documents in `documents/`:
+- 19 PDFs: native plant guides (shade, sun, seashore, rock garden, meadow, butterfly, wildlife, edible plants, etc.)
+- 1 DOCX: Backyard Biodiversity guide
+- 2 XLSX: Museum of Vancouver Indigenous plant guide, plant reference tables
+
+All documents are embedded with 384-dimension vectors (all-MiniLM-L6-v2).
+
+### Environment variables
+
+See `.env.example`. Critical vars:
+
+| Variable | Purpose |
+|----------|---------|
+| `AZURE_OPENAI_KEY` | Azure OpenAI API key |
+| `AZURE_OPENAI_ENDPOINT` | Base URL, e.g. `https://cds-platform-ai.openai.azure.com/` |
+| `AZURE_OPENAI_MODEL_PREF` | Deployment name, default `gpt-4o` |
+| `EMBEDDING_ENGINE` | Set to `native` (free, in-container) |
+| `VECTOR_DB` | Set to `lancedb` |
+| `ANYWHERE_API_KEY` | AnythingLLM API key (auto-generated on first run) |
+
+### Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/install.sh` | Fresh install: pulls image, loads corpus snapshot, starts container |
+| `scripts/update.sh` | Pull latest corpus snapshot from GitHub Releases and restart |
+| `scripts/pack-storage.sh <tag>` | Package current `storage/` as a release tarball |
+| `scripts/test.sh` | End-to-end test suite (14 checks) |
+
+### Running tests
 
 ```bash
-git clone https://github.com/cds-snc/cx_anythingllm_knowledgebase.git
-cd cx_anythingllm_knowledgebase
-./scripts/install.sh
+bash scripts/test.sh
 ```
 
-The install script:
-1. Checks Docker is running
-2. Creates `.env` from `.env.example` (prompts for your OpenAI key)
-3. Downloads the latest embedded corpus from GitHub Releases
-4. Starts AnythingLLM at **http://localhost:3001**
+All 14 checks must pass before releasing. Tests cover: container health, API auth, workspace state, Azure LLM config, 3 live query validations, and anti-hallucination mode.
 
-**On macOS with Colima** (instead of Docker Desktop), start Colima first:
-```bash
-colima start --arch aarch64 --memory 4 --cpu 2
-export DOCKER_HOST="unix://$HOME/.colima/docker.sock"
-```
-
----
-
-## Update to Latest Corpus
+### Releasing a new corpus version
 
 ```bash
-./scripts/update.sh
+# 1. Add documents to documents/, embed them in the UI
+# 2. Package and publish
+bash scripts/pack-storage.sh v$(date +%Y-%m-%d)
+# Run the gh release create command it outputs
 ```
 
-Downloads the latest storage snapshot from GitHub Releases and restarts the container. Safe to run at any time — backs up your current storage first.
+### API access
 
----
-
-## Start / Stop
+The AnythingLLM REST API is available at `http://localhost:3001/api/v1/`. Authenticate with the `ANYWHERE_API_KEY` from your `.env`:
 
 ```bash
-docker-compose up -d      # start
-docker-compose down       # stop
-docker-compose logs -f    # view logs
+curl -X POST http://localhost:3001/api/v1/workspace/cx-knowledge-base/chat \
+  -H "Authorization: Bearer $ANYWHERE_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"message":"What native plants grow well in shade?","mode":"query"}'
 ```
-
----
-
-Open: **http://localhost:3001**
-
----
-
-## First-Time Setup (run once after first start)
-
-1. Open http://localhost:3001 and complete the onboarding wizard.
-2. The wizard will pre-populate from `.env` — verify LLM shows **OpenAI / gpt-4o-mini** and Embedder shows **OpenAI / text-embedding-3-small**.
-
-### Create the research workspace
-
-After onboarding:
-
-1. Click **New Workspace** → name it `Research`.
-2. Open workspace **Settings** (gear icon) → **Chat Settings** tab.
-3. Set **Chat Mode → Query** — this is the anti-hallucination setting. The model will only answer from embedded documents and will say so if it can't find relevant content.
-4. Set this system prompt (paste into System Prompt field):
-
-```
-You are a research assistant. Answer ONLY using information found in the provided documents. 
-If the answer is not in the documents, say: "I could not find that information in the provided documents."
-Do not speculate, infer, or use outside knowledge. Cite the document section when possible.
-```
-
-5. In **Vector Database Settings**, set **Document Similarity Threshold** to `Medium (≥ 0.50)` to start. Drop to `No restriction` if you're getting too many "no relevant info" responses.
-
----
-
-## Uploading Documents
-
-Drop files via the UI:
-
-1. Click the **Upload** button (paper-clip icon in sidebar).
-2. Upload one or more files (PDF, DOCX, TXT, MD, etc.).
-3. Select the uploaded files and click **Move to Workspace → Research**.
-4. Files are now embedded and searchable.
-
-Supported formats: PDF, DOCX, TXT, MD, CSV, JSON, HTML, XML, EPUB, and more.
-
----
-
-## Test Document
-
-A sample test document is in `documents/test-corpus.txt`. Upload it first to confirm the pipeline works end-to-end before loading the full corpus.
-
----
-
-## Adding More Documents (bulk)
-
-Stage files in the `documents/` folder locally, then upload via the UI drag-and-drop. The folder is committed (without secrets) as a staging area.
-
----
-
-## Configuration
-
-All runtime config is in `.env` (gitignored). To change LLM or embedder:
-
-1. Edit `.env`
-2. `docker compose restart anythingllm`
-
-Key environment variables:
-
-| Variable | Current Value | Purpose |
-|---|---|---|
-| `LLM_PROVIDER` | `openai` | LLM backend |
-| `OPEN_MODEL_PREF` | `gpt-4o-mini` | Model |
-| `EMBEDDING_ENGINE` | `openai` | Embedder backend |
-| `EMBEDDING_MODEL_PREF` | `text-embedding-3-small` | Embedding model |
-| `VECTOR_DB` | `lancedb` | Vector store (built-in) |
-| `DISABLE_SWAGGER_DOCS` | `true` | Security |
-
----
-
-## Storage
-
-`storage/` is gitignored. It contains:
-- `anythingllm.db` — SQLite DB (workspaces, chats, settings)
-- `documents/` — processed document text
-- `vector-cache/` — LanceDB vectors
-
-Back up this folder to preserve your embeddings.
