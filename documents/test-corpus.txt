@@ -1,0 +1,62 @@
+AnythingLLM RAG Pipeline — Test Corpus
+
+PURPOSE
+-------
+This document is a controlled test for the RAG pipeline. Upload it to the
+Research workspace and run the queries at the bottom to confirm the system
+is working correctly.
+
+SECTION 1: PROJECT OVERVIEW
+----------------------------
+This repository is configured as a research document corpus using AnythingLLM.
+The system uses Retrieval-Augmented Generation (RAG) to answer questions based
+solely on uploaded documents. It is configured in Query Mode, which means the
+LLM will not use outside knowledge — only content from this corpus.
+
+Key technical facts:
+- LLM: OpenAI gpt-4o-mini
+- Embedding model: OpenAI text-embedding-3-small
+- Vector database: LanceDB (local)
+- Chat mode: Query (document-only, anti-hallucination)
+
+SECTION 2: HOW RAG WORKS
+--------------------------
+When you ask a question, AnythingLLM does the following:
+1. Embeds your question into a vector using the same embedding model.
+2. Searches the vector database for the nearest document chunks.
+3. Passes those chunks as context to the LLM.
+4. The LLM answers using only the provided context.
+
+In Query Mode, if no relevant chunks are found, the system responds:
+"I could not find relevant information in your documents."
+
+SECTION 3: CONFIGURATION NOTES
+--------------------------------
+The similarity threshold controls how strict the search is:
+- No restriction: Returns chunks even if loosely related.
+- Medium (>= 0.50): Balanced. Recommended starting point.
+- High (>= 0.75): Strict. Good for precise factual lookups.
+
+Adjust in workspace Settings > Vector Database Settings.
+
+SECTION 4: TEST QUERIES
+------------------------
+After uploading this document to the Research workspace, run these queries
+to verify the pipeline is working:
+
+Query 1: "What LLM model is this system using?"
+Expected answer: gpt-4o-mini (from Section 1)
+
+Query 2: "How does RAG retrieve information?"
+Expected answer: Embeds the question, searches vector DB, passes chunks to LLM
+(from Section 2)
+
+Query 3: "What is the capital of France?"
+Expected answer: The system should say it cannot find this in the documents
+(this tests the Query Mode anti-hallucination behavior)
+
+Query 4: "What happens when no relevant chunks are found?"
+Expected answer: System responds with "I could not find relevant information"
+(from Section 2)
+
+END OF TEST DOCUMENT

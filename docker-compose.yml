@@ -1,0 +1,20 @@
+services:
+  anythingllm:
+    image: mintplexlabs/anythingllm:latest
+    container_name: anythingllm
+    ports:
+      - "3001:3001"
+    cap_add:
+      - SYS_ADMIN
+    volumes:
+      - ./storage:/app/server/storage
+      - ./.env:/app/server/.env
+    environment:
+      - STORAGE_DIR=/app/server/storage
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s

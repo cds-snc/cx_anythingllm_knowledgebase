@@ -1,0 +1,6 @@
+# AnythingLLM - never commit secrets or runtime data
+.env
+storage/
+
+# macOS
+.DS_Store
