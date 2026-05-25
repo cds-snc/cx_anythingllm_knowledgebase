@@ -1,24 +1,37 @@
-# CX Research - AnythingLLM
+# CX AnythingLLM Knowledge Base
 
-RAG-based document research repository using [AnythingLLM](https://anythingllm.com/) (Docker, self-hosted).
+RAG-based research corpus using [AnythingLLM](https://anythingllm.com/), running locally in Docker. Zero network exposure. Corpus syncs via GitHub Releases.
 
 ## Stack
 
 | Layer | Choice | Why |
 |---|---|---|
-| LLM | OpenAI `gpt-4o-mini` | Reliable, cost-effective for RAG |
+| LLM | OpenAI `gpt-4o-mini` | Cost-effective, reliable for RAG |
 | Embedder | OpenAI `text-embedding-3-small` | High quality, affordable |
-| Vector DB | LanceDB (built-in) | Zero external dependency |
+| Vector DB | LanceDB (built-in) | Zero external dependency, portable |
 | Chat Mode | **Query** (document-only) | Prevents hallucination |
+
+See [docs/distribution-strategy.md](docs/distribution-strategy.md) for the full team-distribution plan.
 
 ---
 
-## Prerequisites
+## Teammate Install (3 steps)
 
-- Colima (macOS container runtime) installed and running
-- `.env` file in project root (auto-generated during setup, gitignored)
+**Prerequisites:** Docker Desktop or Colima, an OpenAI API key.
 
-**Start Colima** (required each machine restart):
+```bash
+git clone https://github.com/cds-snc/cx_anythingllm_knowledgebase.git
+cd cx_anythingllm_knowledgebase
+./scripts/install.sh
+```
+
+The install script:
+1. Checks Docker is running
+2. Creates `.env` from `.env.example` (prompts for your OpenAI key)
+3. Downloads the latest embedded corpus from GitHub Releases
+4. Starts AnythingLLM at **http://localhost:3001**
+
+**On macOS with Colima** (instead of Docker Desktop), start Colima first:
 ```bash
 colima start --arch aarch64 --memory 4 --cpu 2
 export DOCKER_HOST="unix://$HOME/.colima/docker.sock"
@@ -26,21 +39,25 @@ export DOCKER_HOST="unix://$HOME/.colima/docker.sock"
 
 ---
 
+## Update to Latest Corpus
+
+```bash
+./scripts/update.sh
+```
+
+Downloads the latest storage snapshot from GitHub Releases and restarts the container. Safe to run at any time — backs up your current storage first.
+
+---
+
 ## Start / Stop
 
 ```bash
-# Start (detached)
-docker-compose up -d
-
-# Stop
-docker-compose down
-
-# Pull latest image before starting
-docker-compose pull && docker-compose up -d
-
-# View logs
-docker-compose logs -f anythingllm
+docker-compose up -d      # start
+docker-compose down       # stop
+docker-compose logs -f    # view logs
 ```
+
+---
 
 Open: **http://localhost:3001**
 

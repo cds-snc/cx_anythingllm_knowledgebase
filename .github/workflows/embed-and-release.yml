@@ -1,0 +1,195 @@
+name: Embed and Release
+
+# Runs weekly (Monday 8am ET) or manually
+# Embeds any new documents in documents/ and publishes a new storage snapshot
+on:
+  schedule:
+    - cron: '0 13 * * 1'   # Monday 8am ET (UTC-5 = 13:00 UTC)
+  workflow_dispatch:        # Manual trigger from Actions tab
+    inputs:
+      version_tag:
+        description: 'Release tag (default: v<date>)'
+        required: false
+        type: string
+
+jobs:
+  embed-and-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set version tag
+        id: tag
+        run: |
+          TAG="${{ inputs.version_tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="v$(date +%Y-%m-%d)"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Version: $TAG"
+
+      - name: Start AnythingLLM
+        env:
+          OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY }}
+        run: |
+          # Write .env for Docker
+          cat > .env << EOF
+          SERVER_PORT=3001
+          STORAGE_DIR=/app/server/storage
+          SIG_KEY='$(openssl rand -hex 32)'
+          SIG_SALT='$(openssl rand -hex 32)'
+          JWT_SECRET="$(openssl rand -hex 24)"
+          LLM_PROVIDER=openai
+          OPEN_AI_KEY=${OPEN_AI_KEY}
+          OPEN_MODEL_PREF=gpt-4o-mini
+          EMBEDDING_ENGINE=openai
+          EMBEDDING_MODEL_PREF=text-embedding-3-small
+          VECTOR_DB=lancedb
+          WHISPER_PROVIDER=local
+          TTS_PROVIDER=native
+          DISABLE_SWAGGER_DOCS=true
+          EOF
+
+          mkdir -p storage
+
+          # Pull and start AnythingLLM
+          docker pull mintplexlabs/anythingllm:latest
+          docker run -d \
+            --name anythingllm \
+            -p 3001:3001 \
+            --cap-add SYS_ADMIN \
+            -v "${{ github.workspace }}/storage:/app/server/storage" \
+            -v "${{ github.workspace }}/.env:/app/server/.env" \
+            -e STORAGE_DIR=/app/server/storage \
+            mintplexlabs/anythingllm:latest
+
+          # Wait for startup
+          echo "Waiting for AnythingLLM to start..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3001/api/ping | grep -q '"online":true'; then
+              echo "AnythingLLM is up"
+              break
+            fi
+            sleep 5
+          done
+
+      - name: Configure workspace via API
+        env:
+          ANYTHING_LLM_URL: http://localhost:3001
+        run: |
+          # Use the AnythingLLM API to create/verify the Research workspace
+          # First, get the API key (set during onboarding or via env)
+          # For CI, we skip onboarding and use single-user mode with JWT auth
+          
+          # Check if workspace exists; create it if not
+          WORKSPACES=$(curl -s "${ANYTHING_LLM_URL}/api/v1/workspaces" \
+            -H "Authorization: Bearer ${{ secrets.ANYTHINGLLM_API_KEY }}" 2>/dev/null || echo '{"workspaces":[]}')
+          
+          HAS_WORKSPACE=$(echo "$WORKSPACES" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          names = [w.get('name','') for w in data.get('workspaces', [])]
+          print('yes' if 'Research' in names else 'no')
+          " 2>/dev/null || echo "unknown")
+          
+          if [ "$HAS_WORKSPACE" != "yes" ]; then
+            echo "Creating Research workspace..."
+            curl -s -X POST "${ANYTHING_LLM_URL}/api/v1/workspace/new" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer ${{ secrets.ANYTHINGLLM_API_KEY }}" \
+              -d '{"name": "Research", "chatMode": "query"}' || true
+          else
+            echo "Research workspace already exists"
+          fi
+
+      - name: Upload documents via API
+        env:
+          ANYTHING_LLM_URL: http://localhost:3001
+        run: |
+          # Upload each file in documents/ to AnythingLLM
+          WORKSPACE_SLUG="research"
+          UPLOADED=0
+          FAILED=0
+
+          for f in documents/*; do
+            [ -f "$f" ] || continue
+            [ "$(basename "$f")" = ".gitkeep" ] && continue
+
+            FILENAME=$(basename "$f")
+            echo "Uploading: $FILENAME"
+
+            RESPONSE=$(curl -s -X POST "${ANYTHING_LLM_URL}/api/v1/document/upload" \
+              -H "Authorization: Bearer ${{ secrets.ANYTHINGLLM_API_KEY }}" \
+              -F "file=@$f" 2>/dev/null || echo '{"success":false}')
+            
+            SUCCESS=$(echo "$RESPONSE" | python3 -c "import json,sys; print(json.load(sys.stdin).get('success', False))" 2>/dev/null || echo "False")
+            
+            if [ "$SUCCESS" = "True" ]; then
+              UPLOADED=$((UPLOADED + 1))
+              
+              # Move to workspace to trigger embedding
+              DOC_LOCATION=$(echo "$RESPONSE" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          docs = data.get('documents', [])
+          if docs: print(docs[0].get('location', ''))
+          " 2>/dev/null || echo "")
+              
+              if [ -n "$DOC_LOCATION" ]; then
+                curl -s -X POST "${ANYTHING_LLM_URL}/api/v1/workspace/${WORKSPACE_SLUG}/update-embeddings" \
+                  -H "Content-Type: application/json" \
+                  -H "Authorization: Bearer ${{ secrets.ANYTHINGLLM_API_KEY }}" \
+                  -d "{\"adds\": [\"$DOC_LOCATION\"], \"deletes\": []}" || true
+              fi
+            else
+              FAILED=$((FAILED + 1))
+              echo "  FAILED: $FILENAME"
+            fi
+          done
+
+          echo ""
+          echo "Upload complete: $UPLOADED uploaded, $FAILED failed"
+
+      - name: Wait for embedding to complete
+        run: |
+          # Give the embedder time to process
+          echo "Waiting 30s for embedding to complete..."
+          sleep 30
+
+      - name: Package storage snapshot
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          echo "$TAG" > storage/.release-tag
+
+          # Exclude logs and temp files
+          tar -czf "storage-${TAG}.tar.gz" \
+            --exclude="storage/logs" \
+            --exclude="storage/*.log" \
+            --exclude="storage/tmp" \
+            storage/
+
+          SIZE=$(du -sh "storage-${TAG}.tar.gz" | cut -f1)
+          echo "Snapshot: storage-${TAG}.tar.gz ($SIZE)"
+          echo "artifact_path=storage-${TAG}.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          
+          # Delete existing release with same tag if present
+          gh release delete "$TAG" --yes 2>/dev/null || true
+          git tag -d "$TAG" 2>/dev/null || true
+          git push origin ":refs/tags/$TAG" 2>/dev/null || true
+
+          gh release create "$TAG" \
+            "storage-${TAG}.tar.gz" \
+            --title "Knowledge Base ${TAG}" \
+            --notes "Embedded corpus snapshot. Run \`./scripts/update.sh\` to apply to your local instance." \
+            --repo cds-snc/cx_anythingllm_knowledgebase
+
+          echo "Released: $TAG"
