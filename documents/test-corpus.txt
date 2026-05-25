@@ -14,8 +14,8 @@ solely on uploaded documents. It is configured in Query Mode, which means the
 LLM will not use outside knowledge — only content from this corpus.
 
 Key technical facts:
-- LLM: OpenAI gpt-4o-mini
-- Embedding model: OpenAI text-embedding-3-small
+- LLM: Azure OpenAI gpt-4o (CDS Azure endpoint)
+- Embedding model: Native (Xenova/all-MiniLM-L6-v2, runs in container)
 - Vector database: LanceDB (local)
 - Chat mode: Query (document-only, anti-hallucination)
 
@@ -45,7 +45,7 @@ After uploading this document to the Research workspace, run these queries
 to verify the pipeline is working:
 
 Query 1: "What LLM model is this system using?"
-Expected answer: gpt-4o-mini (from Section 1)
+Expected answer: Azure OpenAI gpt-4o (from Section 1)
 
 Query 2: "How does RAG retrieve information?"
 Expected answer: Embeds the question, searches vector DB, passes chunks to LLM
