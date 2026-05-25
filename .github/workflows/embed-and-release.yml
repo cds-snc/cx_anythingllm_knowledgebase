@@ -33,7 +33,8 @@ jobs:
 
       - name: Start AnythingLLM
         env:
-          OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY }}
+          AZURE_OPENAI_KEY: ${{ secrets.AZURE_OPENAI_KEY }}
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
         run: |
           # Write .env for Docker
           cat > .env << EOF
@@ -42,11 +43,13 @@ jobs:
           SIG_KEY='$(openssl rand -hex 32)'
           SIG_SALT='$(openssl rand -hex 32)'
           JWT_SECRET="$(openssl rand -hex 24)"
-          LLM_PROVIDER=openai
-          OPEN_AI_KEY=${OPEN_AI_KEY}
-          OPEN_MODEL_PREF=gpt-4o-mini
-          EMBEDDING_ENGINE=openai
-          EMBEDDING_MODEL_PREF=text-embedding-3-small
+          LLM_PROVIDER=azure
+          AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+          AZURE_OPENAI_APIKEY=${AZURE_OPENAI_KEY}
+          OPEN_AI_KEY=${AZURE_OPENAI_KEY}
+          OPEN_MODEL_PREF=gpt-4o
+          AZURE_OPENAI_MODEL_VERSION=2024-08-01-preview
+          EMBEDDING_ENGINE=native
           VECTOR_DB=lancedb
           WHISPER_PROVIDER=local
           TTS_PROVIDER=native

@@ -46,17 +46,18 @@ if [ ! -f ".env" ]; then
   echo ""
   echo "Created .env from .env.example"
   echo ""
-  echo "ACTION REQUIRED: Edit .env and fill in your OPEN_AI_KEY."
-  echo "  Get a key at: https://platform.openai.com/api-keys"
+  echo "ACTION REQUIRED: Edit .env and fill in AZURE_OPENAI_APIKEY and OPEN_AI_KEY."
+  echo "  Get the key from 1Password: 'Azure OpenAI API key - Jesse's Key' → credential"
   echo "  Then re-run this script."
   echo ""
   exit 0
 fi
 
-# --- Verify OpenAI key is set ---
-if grep -q "OPEN_AI_KEY=$" .env || grep -q "OPEN_AI_KEY=your-key-here" .env 2>/dev/null; then
-  echo "ERROR: OPEN_AI_KEY is not set in .env"
-  echo "Edit .env and add your OpenAI API key, then re-run."
+# --- Verify Azure key is set ---
+if grep -q 'AZURE_OPENAI_APIKEY=your-azure-openai-api-key-here' .env 2>/dev/null || grep -q 'AZURE_OPENAI_APIKEY=$' .env 2>/dev/null; then
+  echo "ERROR: AZURE_OPENAI_APIKEY is not set in .env"
+  echo "Edit .env and add your Azure OpenAI API key, then re-run."
+  echo "  (Get from 1Password: 'Azure OpenAI API key' → credential field)"
   exit 1
 fi
 echo "[✓] .env configured"

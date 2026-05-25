@@ -6,8 +6,8 @@ RAG-based research corpus using [AnythingLLM](https://anythingllm.com/), running
 
 | Layer | Choice | Why |
 |---|---|---|
-| LLM | OpenAI `gpt-4o-mini` | Cost-effective, reliable for RAG |
-| Embedder | OpenAI `text-embedding-3-small` | High quality, affordable |
+| LLM | Azure OpenAI `gpt-4o` | CDS-managed endpoint, enterprise key |
+| Embedder | Native (local) | Runs in container, no API cost |
 | Vector DB | LanceDB (built-in) | Zero external dependency, portable |
 | Chat Mode | **Query** (document-only) | Prevents hallucination |
 
@@ -17,7 +17,7 @@ See [docs/distribution-strategy.md](docs/distribution-strategy.md) for the full 
 
 ## Teammate Install (3 steps)
 
-**Prerequisites:** Docker Desktop or Colima, an OpenAI API key.
+**Prerequisites:** Docker Desktop or Colima, an Azure OpenAI API key (get from 1Password: `Azure OpenAI API key - Jesse's Key`).
 
 ```bash
 git clone https://github.com/cds-snc/cx_anythingllm_knowledgebase.git
