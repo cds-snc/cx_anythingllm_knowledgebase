@@ -1,0 +1,62 @@
+[
+  {
+    "label": "Q1 \u2013 Semantic synthesis",
+    "question": "Why should I consider a native plant garden?",
+    "answer": "Considering a native plant garden offers several benefits, especially in a region like Vancouver Island:\n\n1. **Low Watering Needs**: Native plants thrive naturally in the region and, once established, require little to no watering, relying primarily on rainwater.\n\n2. **Support for Biodiversity**: Native plants support biodiversity and healthy ecosystems by providing habitat and food for local wildlife, migratory birds, and pollinators.\n\n3. **Low Maintenance**: These plants require little maintenance compared to non-native species.\n\n4. **Rainwater Management**: Native plants help manage rainwater runoff effectively.\n\n5. **Soil Health**: They reduce soil compaction with their deep root systems.\n\n6. **Sustainability**: Native plants are a sustainable alternative to non-native and invasive species, contributing to the resilience of local ecosystems.\n\nBy choosing native plants for your garden, you can create a beautiful, sustainable, and ecologically beneficial space that thrives in both sunny and shaded areas of your property.",
+    "sources": 6
+  },
+  {
+    "label": "Q2 \u2013 Semantic synthesis",
+    "question": "How should a gardener choose native plants for different conditions in their yard?",
+    "answer": "When choosing native plants for different conditions in your yard, consider the following steps:\n\n1. **Assess Your Property's Conditions**: Understand the unique conditions of your property during the four seasons, including sun exposure, shade, wind, water availability, soil types, and existing vegetation. This knowledge will help inform your design and allow you to pick the most suitable plants for each area.\n\n2. **Set Gardening Goals**: Determine what you want to achieve with your garden. Consider the types of wildlife you want to attract, such as birds, bees, butterflies, frogs, and salamanders. Think about the visual aspects you desire, such as plant sizes and colors for different seasons.\n\n3. **Select Plants Based on Conditions**: Choose plants that are well-suited to the specific conditions of each part of your yard. For sunny areas, select plants that thrive in direct sunlight. For shaded areas, choose plants that are adapted to grow in low-light conditions.\n\nBy carefully assessing your property's conditions and setting clear gardening goals, you can select native plants that will thrive in both the sunny front yard and the shaded backyard, creating a diverse and vibrant garden.",
+    "sources": 6
+  },
+  {
+    "label": "Q3 \u2013 Direct retrieval",
+    "question": "What native plants are recommended for my moist, shady backyard garden?",
+    "answer": "For a moist, shady backyard garden, the following native plants are recommended:\n\n- **Western Redcedar**: This tree thrives in moist, shaded environments and can provide a lush backdrop for your garden.\n- **Western Hemlock**: Another tree that does well in shaded areas with adequate moisture.\n- **Sword Fern**: A classic choice for shaded gardens, adding texture and greenery.\n- **Deer Fern**: Suitable for moist, shaded conditions, offering a delicate fern appearance.\n- **False Lily-of-the-valley**: A ground cover plant that thrives in shaded, moist areas, providing a lush carpet of foliage.\n\nThese plants are well-suited to the conditions of a moist, shady backyard and will help create a thriving, low-maintenance garden.",
+    "sources": 6
+  },
+  {
+    "label": "Q4 \u2013 Multi-constraint reasoning",
+    "question": "I like the look of big white flowers in my garden. Which plants would achieve this? Where could I plant them?",
+    "answer": "For big white flowers, you might consider the following native plants:\n\n1. **Pacific rhododendron (*Rhododendron macrophyllum*)**: This plant has large, showy white flowers and can be planted in shaded areas, making it suitable for your backyard.\n\n2. **Wood sorrel (*Oxalis oregana*)**: It features white to pink flowers and thrives in shaded environments, so it would be a good choice for your backyard.\n\n3. **Fringecup (*Tellima grandiflora*)**: This plant has fragrant white flower spires and can attract butterflies. It grows well in shaded areas, making it suitable for your backyard.\n\nThese plants can help you achieve the look of big white flowers in your garden, with the Pacific rhododendron, wood sorrel, and fringecup being suitable for the shaded conditions of your backyard. Unfortunately, the provided documents do not list any native plants with big white flowers that are specifically suited for sunny conditions in your front yard.",
+    "sources": 2
+  },
+  {
+    "label": "Q5 \u2013 Cross-document retrieval",
+    "question": "I need a new shrub in my front yard that would also attract pollinators. What are some options?",
+    "answer": "For a sunny front yard that attracts pollinators, you can consider the following native shrubs:\n\n1. **Red-osier dogwood (*Cornus sericea*)**: This shrub is fast-growing with white flowers and showy red twigs. It attracts birds, bees, and butterflies, making it a great choice for pollinators.\n\n2. **Thimbleberry (*Rubus parviflorus*)**: With large white flowers that produce red berries, this shrub is relished by many bird and mammal species and is fabulous for attracting pollinators.\n\n3. **Pacific ninebark (*Physocarpus capitatus*)**: Known for its showy white flower clusters, this shrub attracts native bees and provides great cover for birds and small mammals.\n\nThese shrubs are suitable for sunny conditions and will help attract pollinators to your front yard.",
+    "sources": 6
+  },
+  {
+    "label": "Q6 \u2013 Missing attribute",
+    "question": "Which native plants are safest if I have a pet dog?",
+    "answer": "The provided documents do not contain specific information about the safety of native plants for pets, including dogs. They focus on the benefits of native plants for ecosystems, their maintenance, and their role in supporting biodiversity and pollinators. For information on pet-safe plants, you may need to consult additional resources or contact a local gardening expert or veterinarian.",
+    "sources": 6
+  },
+  {
+    "label": "Q7 \u2013 Missing attribute",
+    "question": "Which native plants require the least maintenance during winter?",
+    "answer": "The documents provided do not specifically address which native plants require the least maintenance during winter. They do mention that evergreen trees are particularly important in the winter months when temperatures are cooler, as they provide cover and nesting sites for birds. However, for specific information on low-maintenance native plants during winter, additional resources or expert advice may be needed.",
+    "sources": 6
+  },
+  {
+    "label": "Q8 \u2013 Domain-boundary",
+    "question": "What is the best time of year to resod my lawn?",
+    "answer": "The documents provided do not contain specific information about the best time of year to resod a lawn on Vancouver Island. They focus on native plant gardening, including plant selection for attracting wildlife and maintaining a native plant garden. For specific advice on resodding a lawn, you may need to consult local gardening resources or experts familiar with the climate and conditions of Vancouver Island.",
+    "sources": 0
+  },
+  {
+    "label": "Q9 \u2013 Numerical hallucination",
+    "question": "How much water can I expect to save in a year by switching to a native garden instead of a traditional lawn?",
+    "answer": "The documents provided do not contain specific information on the amount of water you can expect to save by switching to a native garden instead of a traditional lawn. They do mention that native plants are adapted to local conditions and generally require less water and maintenance compared to non-native species, which implies potential water savings. However, exact figures or estimates for water savings are not provided in the documents.",
+    "sources": 4
+  },
+  {
+    "label": "Q10 \u2013 Temporal hallucination",
+    "question": "Which month should I plan to plant new roses in my garden?",
+    "answer": "The documents provided do not specifically mention roses or the best time to plant them. However, they do suggest that native plants should be planted in the fall to take advantage of the fall and winter rains. While this advice is specific to native plants, it might be beneficial to consider similar timing for other types of plants, such as roses, to ensure they establish well with natural rainfall. For specific advice on roses, consulting a local nursery or gardening expert on Vancouver Island would be recommended.",
+    "sources": 0
+  }
+]

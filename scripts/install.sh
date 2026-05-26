@@ -155,6 +155,25 @@ done
 echo ""
 
 if curl -s http://localhost:3001/api/ping 2>/dev/null | grep -q '"online":true'; then
+
+  # ── Write the real API key to .env ─────────────────────────────────────────
+  # AnythingLLM generates the key on first startup; retrieve it from the DB
+  REAL_API_KEY=$(docker exec anythingllm node -e \
+    "const {PrismaClient}=require('/app/server/node_modules/@prisma/client');
+    const p=new PrismaClient();
+    p.api_keys.findFirst().then(r=>{console.log(r ? r.secret : '');p.\$disconnect();})" \
+    2>/dev/null || true)
+  if [ -n "${REAL_API_KEY:-}" ]; then
+    REAL_API_KEY="$REAL_API_KEY" python3 -c "
+import os
+key = os.environ['REAL_API_KEY']
+with open('.env', 'r') as f: lines = f.readlines()
+result = [f'ANYWHERE_API_KEY={key}\n' if l.startswith('ANYWHERE_API_KEY=') else l for l in lines]
+with open('.env', 'w') as f: f.writelines(result)
+"
+    ok "API key saved to .env"
+  fi
+
   echo ""
   echo "╔════════════════════════════════════════╗"
   echo "║        Setup complete!                 ║"
