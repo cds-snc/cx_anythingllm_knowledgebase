@@ -2,5 +2,14 @@
 .env
 storage/
 
+# Original broken PDFs (pre-OCR) — superseded by docs/corpus-md/
+documents/original-broken/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
 # macOS
 .DS_Store
+.DS_Store?
