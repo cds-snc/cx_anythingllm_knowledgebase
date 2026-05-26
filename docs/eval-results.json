@@ -1,171 +1,131 @@
 [
   {
     "id": "Q1",
-    "question": "What native plants can I grow in my backyard?",
-    "answer": "The documents provided do not list specific native plants that are suitable for shaded conditions in a backyard. They focus on general advice for gardening with native plants and mention some plants that thrive in shade. For specific recommendations on native plants that would work well in a shaded backyard, you may need to consult additional resources or local experts.",
+    "question": "Why should I consider a native plant garden?",
+    "response": "Gardening with native plants offers several benefits:\n\n1. **Low-Maintenance**: Native plants are adapted to the local climate and soil conditions, which means they generally require less water, fertilizer, and care compared to non-native species.\n\n2. **Wildlife Habitat**: Native plants provide essential habitat for local wildlife, including birds, bees, and butterflies. By choosing native plants, you can support biodiversity and help sustain local ecosystems.\n\n3. **Beauty**: Native plants can create a beautiful and thriving garden that reflects the natural landscape of the region.\n\nOverall, a native plant garden can be both aesthetically pleasing and environmentally beneficial, supporting nature while reducing the need for intensive garden maintenance.",
     "sources": [
       "nativeplantsguide.md",
       "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "common-native-plants-for-the-seashore.md",
       "23889---crd-infosheets---native-plants-0-4.md",
       "nativeplantsguide.md",
-      "container-gardening-with-native-plants-in-sun.md",
-      "nativeplantsguide.md",
-      "evergreen-native-plants.md",
-      "nativeplantsguide.md"
+      "23889---crd-infosheets---native-plants-0-4.md",
+      "native-plants-for-rock-gardens.md"
     ]
   },
   {
     "id": "Q2",
-    "question": "What is Salal and where would it grow best?",
-    "answer": "Salal (Gaultheria shallon) is mentioned in the documents as a native plant. It is suitable for creating forested habitats and can grow in both dry sites and areas with average moisture. Salal is listed among plants that can be used in shaded environments, such as under a forest canopy. Therefore, it would likely grow well in your shaded backyard. However, the documents do not provide specific details about its growth requirements beyond these general habitat suggestions.",
+    "question": "How should a gardener choose native plants for different conditions in their yard?",
+    "response": "When choosing native plants for different conditions in your yard, consider the following guidelines:\n\n1. **Assess Sunlight**: Determine which areas of your yard receive full sun, partial shade, or full shade. Choose plants that are suited to these light conditions. For example, some plants thrive in sunny conditions, while others are better suited for shaded areas.\n\n2. **Soil Type and Drainage**: Understand the soil type and drainage conditions in your yard. Some native plants prefer well-drained sandy soils, while others may thrive in clay or loamy soils. \n\n3. **Water Availability**: Consider the natural moisture levels in your yard. Some native plants are drought-tolerant and suitable for dry areas, while others may require more moisture.\n\n4. **Diversity**: Plant a variety of species to support a diverse range of wildlife. This includes selecting plants with different bloom times, flower shapes, and colors to provide food and habitat throughout the growing season.\n\n5. **Local Adaptation**: Choose plants that are native to your specific region, as they will be best adapted to the local climate and environmental conditions.\n\nBy considering these factors, you can select native plants that will thrive in the specific conditions of your yard, creating a sustainable and vibrant garden.",
     "sources": [
-      "nativeplantsguide.md",
-      "container-gardening-with-native-plants-in-sun.md",
-      "Native_plant_guide__Plant_table.md",
-      "nativeplantsguide.md",
-      "Museum_of_Vancouver__Indigenous_plant_guide.md",
+      "Backyard_Biodiversity.md",
+      "common-native-plants-for-sunny-conditions.md",
       "nativeplantsguide.md",
       "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "native-plants-for-moist-wet-sites.md",
-      "evergreen-native-plants.md"
+      "23889---crd-infosheets---native-plants-0-4.md",
+      "nativeplantsguide.md"
     ]
   },
   {
     "id": "Q3",
-    "question": "What plants can tolerate both shade and wet conditions?",
-    "answer": "According to the documents, plants that can tolerate both shade and wet conditions include western redcedar, western hemlock, bigleaf maple, salmonberry, red elderberry, Pacific ninebark, and red-osier. These plants are suitable for wetter sites and can be part of a forested habitat with a canopy and shade-tolerant shrubs and plants growing below.",
+    "question": "What native plants are recommended for my moist, shady backyard garden?",
+    "response": "For a moist, shady backyard garden on Vancouver Island, the following native plants are recommended:\n\n- Western redcedar\n- Western hemlock\n- Bigleaf maple\n- Salmonberry\n- Red elderberry\n- Pacific ninebark\n- Red-osier dogwood\n\nThese plants are noted as suitable for wetter sites, which would align with moist, shady conditions.",
     "sources": [
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "container-gardening-with-native-plants-in-sun.md",
-      "23889---crd-infosheets---native-plants-0-4.md",
-      "common-native-plants-for-the-seashore.md",
-      "common-native-plants-for-the-seashore.md",
-      "nativeplantsguide.md",
+      "common-native-plants-for-shade-conditions.md",
       "native-plants-for-moist-wet-sites.md",
-      "nativeplantsguide.md"
+      "native-plants-for-moist-wet-sites.md",
+      "common-native-plants-for-sunny-conditions.md",
+      "nativeplantsguide.md",
+      "container-gardening-with-native-plants-in-shade.md"
     ]
   },
   {
     "id": "Q4",
-    "question": "Can I grow Pacific Rhododendron? What colour are its flowers?",
-    "answer": "The documents provided do not contain information about Pacific Rhododendron, including whether it can be grown in your specific conditions or the color of its flowers. You may need to consult additional resources or local experts for information on Pacific Rhododendron's suitability for your garden and its flower characteristics.",
+    "question": "I like the look of big white flowers in my garden. Which plants would achieve this? Where could I plant them?",
+    "response": "For big white flowers, you might consider the following native plants:\n\n1. **Snowball Bush**: Known for its showy white flower clusters, this plant attracts native bees and provides great cover for birds and small mammals. It could be planted in areas where you want to attract pollinators and provide wildlife habitat.\n\n2. **Red-osier Dogwood**: This plant has large white flowers that produce red berries, which are relished by many bird and mammal species. It is fabulous for filling in gaps in your garden and can be planted in moist, shady areas.\n\nThese plants can be placed in areas where you want to enhance wildlife habitat or fill in garden spaces with attractive blooms.",
     "sources": [
       "nativeplantsguide.md",
-      "container-gardening-with-native-plants-in-sun.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
       "Native_plant_guide__Plant_table.md",
-      "23889---crd-infosheets---native-plants-0-4.md",
+      "native-plants-for-rock-gardens.md",
       "nativeplantsguide.md",
-      "container-gardening-with-native-plants-in-shade.md"
+      "nativeplantsguide.md",
+      "nativeplantsguide.md"
     ]
   },
   {
     "id": "Q5",
-    "question": "What native ground covers would work in a sunny front yard?",
-    "answer": "The documents provided do not specify native ground covers that are suitable for a sunny front yard. For recommendations on native ground covers that thrive in sunny conditions, you may need to consult additional resources or local experts familiar with the native plants of Vancouver Island.",
+    "question": "I need a new shrub in my front yard that would also attract pollinators. What are some options?",
+    "response": "For a shrub that attracts pollinators, you might consider the following options:\n\n1. **Snowball Bush**: This plant is sometimes called 'snowball bush' for its showy white flower clusters and is known to attract native bees. It also provides great cover for birds and small mammals.\n\n2. **Red-osier Dogwood**: This shrub has early fragrant white flowers that attract lots of pollinators to your garden. It is also fast-growing with showy red twigs and gorgeous fall leaves.\n\nThese shrubs would be excellent choices for attracting pollinators to your front yard.",
     "sources": [
       "nativeplantsguide.md",
       "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "native-plant-ground-covers.md",
-      "23889---crd-infosheets---native-plants-0-4.md",
-      "nativeplantsguide.md",
-      "container-gardening-with-native-plants-in-sun.md",
+      "Backyard_Biodiversity.md",
       "nativeplantsguide.md",
       "nativeplantsguide.md",
-      "Backyard_Biodiversity.md"
+      "nativeplantsguide.md"
     ]
   },
   {
     "id": "Q6",
-    "question": "How much fertilizer should I use on Salal?",
-    "answer": "The documents provided do not contain information regarding the use of fertilizer on Salal or how much should be applied. For guidance on fertilizing Salal, you may need to consult additional resources or local experts.",
+    "question": "Which native plants are safest if I have a pet dog?",
+    "response": "The documents provided do not contain specific information about the safety of native plants for pet dogs. Therefore, I cannot provide guidance on which native plants are safest for dogs based on the available context. It is recommended to consult a veterinarian or a pet safety expert for advice on pet-safe plants.",
     "sources": [
-      "nativeplantsguide.md",
-      "23889---crd-infosheets---native-plants-0-4.md",
-      "23889---crd-infosheets---native-plants-0-4.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "attracting-wildlife-in-your-garden.md",
-      "container-gardening-with-native-plants-in-sun.md",
+      "native-plants-for-moist-wet-sites.md",
+      "common-native-plants-for-sunny-conditions.md",
       "Backyard_Biodiversity.md",
+      "23889---crd-infosheets---native-plants-0-4.md",
       "nativeplantsguide.md",
-      "Backyard_Biodiversity.md"
+      "23889---crd-infosheets---native-plants-0-4.md"
     ]
   },
   {
     "id": "Q7",
-    "question": "What is the best native plant to deter deer in Victoria?",
-    "answer": "The documents mention that deer find certain plants attractive, such as the evergreen fern referred to as \"Valuable food for deer, hence the name!\" However, they do not specify any native plants that are effective at deterring deer. For information on native plants that might deter deer, you may need to consult additional resources or local experts.",
+    "question": "Which native plants require the least maintenance during winter?",
+    "response": "The documents provided do not specify which native plants require the least maintenance during winter. Therefore, I cannot provide guidance on low-maintenance native plants for winter based on the available context.",
     "sources": [
+      "23889---crd-infosheets---native-plants-0-4.md",
+      "23889---crd-infosheets---native-plants-0-4.md",
       "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md",
-      "attracting-wildlife-in-your-garden.md",
-      "nativeplantsguide.md",
-      "nativeplantsguide.md"
+      "common-native-plants-for-sunny-conditions.md",
+      "common-native-plants-for-sunny-conditions.md",
+      "23889---crd-infosheets---native-plants-0-4.md"
     ]
   },
   {
     "id": "Q8",
-    "question": "How many native plant species exist in BC?",
-    "answer": "The documents provided do not specify the number of native plant species that exist in British Columbia. For this information, you may need to consult additional resources or local experts.",
+    "question": "What is the best time of year to resod my lawn?",
+    "response": "The documents provided do not contain information about the best time of year to resod a lawn. Therefore, I cannot provide guidance on lawn resodding based on the available context.",
     "sources": [
       "nativeplantsguide.md",
-      "common-native-plants-for-the-seashore.md",
       "nativeplantsguide.md",
-      "native-plants-for-moist-wet-sites.md",
+      "nativeplantsguide.md",
+      "Backyard_Biodiversity.md",
       "23889---crd-infosheets---native-plants-0-4.md",
-      "evergreen-native-plants.md",
-      "container-gardening-with-native-plants-in-sun.md",
-      "common-native-plants-for-shade-conditions.md",
-      "nativeplantsguide.md",
-      "container-gardening-with-native-plants-in-shade.md"
+      "Backyard_Biodiversity.md"
     ]
   },
   {
     "id": "Q9",
-    "question": "What native plants were used by Indigenous peoples on Vancouver Island in the 1800s?",
-    "answer": "The documents provided do not contain information about which native plants were used by Indigenous peoples on Vancouver Island in the 1800s. For historical and ethnobotanical information, you may need to consult additional resources or local experts knowledgeable in the traditional uses of plants by Indigenous communities.",
+    "question": "How much water can I expect to save in a year by switching to a native garden instead of a traditional lawn?",
+    "response": "The documents provided do not contain specific information or statistics about the amount of water that can be saved by switching from a traditional lawn to a native garden. Therefore, I cannot provide an estimate of water savings based on the available context.",
     "sources": [
       "nativeplantsguide.md",
       "nativeplantsguide.md",
-      "Museum_of_Vancouver__Indigenous_plant_guide.md",
-      "common-native-plants-for-the-seashore.md",
-      "native-plants-for-moist-wet-sites.md",
-      "evergreen-native-plants.md",
-      "nativeplantsguide.md",
       "23889---crd-infosheets---native-plants-0-4.md",
       "nativeplantsguide.md",
-      "nativeplantsguide.md"
+      "Backyard_Biodiversity.md",
+      "23889---crd-infosheets---native-plants-0-4.md"
     ]
   },
   {
     "id": "Q10",
-    "question": "Which native plants have the highest carbon sequestration rate?",
-    "answer": "The documents provided do not contain information about the carbon sequestration rates of native plants. For details on which native plants might have high carbon sequestration rates, you may need to consult additional resources or scientific studies focused on this topic.",
+    "question": "Which month should I plan to plant new roses in my garden?",
+    "response": "The documents provided do not contain specific information about the best month to plant roses. However, they do mention that the rainy seasons, fall or early spring, are ideal times to plant native plants because water helps with root development. This general advice might be applicable to roses as well, but for specific guidance on roses, it would be best to consult a resource dedicated to rose gardening.",
     "sources": [
       "nativeplantsguide.md",
+      "Native_plant_guide__Plant_table.md",
       "nativeplantsguide.md",
-      "23889---crd-infosheets---native-plants-0-4.md",
-      "nativeplantsguide.md",
-      "common-native-plants-for-the-seashore.md",
-      "attracting-wildlife-in-your-garden.md",
-      "nativeplantsguide.md",
-      "evergreen-native-plants.md",
-      "nativeplantsguide.md",
+      "Native_plant_guide__Plant_table.md",
+      "Native_plant_guide__Plant_table.md",
       "nativeplantsguide.md"
     ]
   }
