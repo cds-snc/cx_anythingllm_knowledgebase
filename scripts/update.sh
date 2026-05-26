@@ -1,95 +1,128 @@
 #!/usr/bin/env bash
 # update.sh — Download the latest knowledge base snapshot and restart
-# Usage: ./scripts/update.sh
+# Usage: bash scripts/update.sh
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
-echo "=== CX AnythingLLM — Update Knowledge Base ==="
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
+ok()   { printf "${GREEN}[✓]${NC} %s\n" "$*"; }
+warn() { printf "${YELLOW}[!]${NC} %s\n" "$*"; }
+err()  { printf "${RED}[✗]${NC} %s\n" "$*"; exit 1; }
+
+echo ""
+echo "=== CX Knowledge Base — Update ==="
 echo ""
 
-# --- Check Docker daemon ---
-if ! docker info &>/dev/null; then
-  echo "ERROR: Docker daemon not running. Start Colima or Docker Desktop first."
-  exit 1
+# ── Find docker-compose command ────────────────────────────────────────────────
+if docker compose version &>/dev/null 2>&1; then
+  DC="docker compose"
+elif command -v docker-compose &>/dev/null; then
+  DC="docker-compose"
+else
+  err "Could not find docker compose. Is Docker Desktop installed and running?"
 fi
 
-# --- Fetch latest release ---
-echo "Checking for latest snapshot on GitHub Releases..."
-LATEST=$(curl -s https://api.github.com/repos/cds-snc/cx_anythingllm_knowledgebase/releases/latest \
-  -H "Accept: application/vnd.github.v3+json")
-
-LATEST_TAG=$(echo "$LATEST" | grep '"tag_name"' | head -1 | cut -d'"' -f4)
-LATEST_URL=$(echo "$LATEST" | grep '"browser_download_url"' | grep 'storage\.tar\.gz' | head -1 | cut -d'"' -f4)
-
-if [ -z "$LATEST_URL" ]; then
-  echo "ERROR: No storage snapshot found in GitHub Releases."
-  echo "Has the corpus been embedded and released? Check:"
-  echo "  https://github.com/cds-snc/cx_anythingllm_knowledgebase/releases"
-  exit 1
+# ── Auto-detect Colima socket ──────────────────────────────────────────────────
+if [ -z "${DOCKER_HOST:-}" ]; then
+  for sock in "$HOME/.colima/default/docker.sock" "$HOME/.colima/docker.sock"; do
+    if [ -S "$sock" ]; then
+      export DOCKER_HOST="unix://$sock"
+      warn "Detected Colima — using $DOCKER_HOST"
+      break
+    fi
+  done
 fi
 
-echo "Latest release: $LATEST_TAG"
+# ── Check Docker is running ────────────────────────────────────────────────────
+if ! docker info &>/dev/null 2>&1; then
+  err "Docker is not running. Open Docker Desktop and wait for it to start."
+fi
 
-# --- Check current version ---
+# ── Fetch latest release info ──────────────────────────────────────────────────
+echo "Checking for latest snapshot..."
+RELEASE_JSON=$(curl -sf \
+  "https://api.github.com/repos/cds-snc/cx_anythingllm_knowledgebase/releases/latest" \
+  || true)
+
+if [ -z "${RELEASE_JSON:-}" ]; then
+  err "Could not reach GitHub. Check your internet connection."
+fi
+
+read -r LATEST_TAG LATEST_URL < <(echo "$RELEASE_JSON" | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+tag = data.get('tag_name', '')
+url = ''
+for a in data.get('assets', []):
+    if a['name'].startswith('storage') and a['name'].endswith('.tar.gz'):
+        url = a['browser_download_url']
+        break
+print(tag, url)
+" 2>/dev/null || echo " ")
+
+if [ -z "${LATEST_URL:-}" ] || [ "$LATEST_URL" = " " ]; then
+  err "No storage snapshot found in the latest release.
+  Check: https://github.com/cds-snc/cx_anythingllm_knowledgebase/releases"
+fi
+
+# ── Check if already up to date ───────────────────────────────────────────────
 CURRENT_TAG=""
-if [ -f "storage/.release-tag" ]; then
-  CURRENT_TAG=$(cat storage/.release-tag)
-fi
+[ -f "storage/.release-tag" ] && CURRENT_TAG=$(cat storage/.release-tag)
 
 if [ "$CURRENT_TAG" = "$LATEST_TAG" ]; then
-  echo "[✓] Already on latest release ($LATEST_TAG). Nothing to do."
+  ok "Already on latest ($LATEST_TAG). Nothing to do."
   exit 0
 fi
 
-echo "Updating from '${CURRENT_TAG:-none}' → $LATEST_TAG"
+echo "Updating: '${CURRENT_TAG:-none}' → $LATEST_TAG"
 echo ""
 
-# --- Stop container ---
+# ── Stop container ─────────────────────────────────────────────────────────────
 echo "Stopping AnythingLLM..."
-docker-compose down 2>/dev/null || true
+$DC down 2>/dev/null || true
 
-# --- Backup existing storage ---
+# ── Backup existing storage ────────────────────────────────────────────────────
 if [ -d "storage" ] && [ "$(ls -A storage 2>/dev/null)" ]; then
   BACKUP="storage-backup-$(date +%Y%m%d-%H%M%S).tar.gz"
   echo "Backing up current storage to $BACKUP..."
   tar -czf "$BACKUP" storage/
 fi
 
-# --- Download new snapshot ---
+# ── Download and extract new snapshot ─────────────────────────────────────────
 echo "Downloading $LATEST_TAG..."
-curl -L -o /tmp/storage-new.tar.gz "$LATEST_URL"
+curl -L --progress-bar -o /tmp/storage-new.tar.gz "$LATEST_URL"
 
 echo "Extracting..."
-# Replace storage directory (keep .env outside storage, so safe to wipe)
 rm -rf storage/
 tar -xzf /tmp/storage-new.tar.gz
 rm /tmp/storage-new.tar.gz
 
-# --- Write version tag ---
 echo "$LATEST_TAG" > storage/.release-tag
 
-# --- Restart container ---
+# ── Restart ────────────────────────────────────────────────────────────────────
 echo "Starting AnythingLLM with updated knowledge base..."
-docker-compose up -d
+$DC up -d
 
 echo ""
-echo "Waiting for AnythingLLM to start..."
-for i in {1..30}; do
+printf "Waiting for AnythingLLM to be ready"
+for i in $(seq 1 30); do
   if curl -s http://localhost:3001/api/ping 2>/dev/null | grep -q '"online":true'; then
     break
   fi
+  printf "."
   sleep 2
 done
+echo ""
 
 if curl -s http://localhost:3001/api/ping 2>/dev/null | grep -q '"online":true'; then
   echo ""
-  echo "[✓] Updated to $LATEST_TAG"
-  echo "    AnythingLLM running at: http://localhost:3001"
+  ok "Updated to $LATEST_TAG"
+  echo "  AnythingLLM running at: http://localhost:3001"
+  echo ""
 else
-  echo "ERROR: AnythingLLM failed to start after update."
-  echo "Check: docker-compose logs -f anythingllm"
-  exit 1
+  err "AnythingLLM failed to start after update.
+  Check: $DC logs --tail 30"
 fi

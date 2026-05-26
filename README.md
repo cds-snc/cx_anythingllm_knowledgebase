@@ -1,75 +1,154 @@
 # CX Knowledge Base
 
-A local AI assistant pre-loaded with native plants documentation for British Columbia. Ask it questions and it answers only from the embedded documents — no hallucinations, no internet, no general knowledge drift.
+A local AI assistant pre-loaded with native plants documentation for British Columbia. Ask it questions in plain English — it answers only from the embedded documents, so it won't make things up.
 
 ---
 
-## Quick Start (non-technical)
+## What you'll need
 
-**What you need before starting:**
-- Docker Desktop installed and running
-- Your Azure OpenAI API key (ask your team lead)
-- Git
+- A Mac (macOS 13 Ventura or later)
+- Your Azure OpenAI credentials — two values, ask your team lead:
+  - **API key** — looks like `a1b2c3d4e5f6...`
+  - **Endpoint URL** — looks like `https://cds-platform-ai.openai.azure.com/`
+- About 10–15 minutes for the first-time setup
 
-**Steps:**
+That's it. No developer tools, no accounts, no coding required.
 
-1. **Download the project**
-   Open Terminal and run:
-   ```
-   git clone https://github.com/cds-snc/cx_anythingllm_knowledgebase.git
-   cd cx_anythingllm_knowledgebase
-   ```
+---
 
-2. **Create your config file**
-   ```
-   cp .env.example .env
-   ```
-   Open `.env` in any text editor. Fill in these three lines with your credentials:
-   ```
-   AZURE_OPENAI_KEY=your-key-here
-   AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-   ```
-   Save and close the file.
+## One-time setup
 
-3. **Install the knowledge base**
-   ```
-   bash scripts/install.sh
-   ```
-   This downloads the app, loads the pre-embedded document library, and starts everything. Takes about 2–3 minutes the first time.
+### Step 1 — Install Docker Desktop
 
-4. **Open the assistant**
-   Go to [http://localhost:3001](http://localhost:3001) in your browser.
-   - Create an account when prompted (this is local to your machine)
-   - Select the **CX Knowledge Base** workspace
-   - Type your question and press Enter
+Docker runs the AI assistant on your Mac. You only do this once.
 
-5. **Stop the assistant when done**
-   ```
-   docker-compose down
-   ```
-   Your data is saved — next time just run `docker-compose up -d` to restart.
+1. Go to **https://www.docker.com/products/docker-desktop/**
+2. Click **Download for Mac** — choose **Apple Chip** if your Mac is M1/M2/M3/M4, or **Intel Chip** if it's older
+3. Open the downloaded `.dmg` file and drag Docker to your Applications folder
+4. Open **Docker** from your Applications folder (or use Spotlight: press `⌘ Space`, type `Docker`, press Enter)
+5. A whale icon will appear in your menu bar — wait until it **stops animating**
 
-**To get the latest document updates:**
+Docker Desktop is now running. You can leave it running in the background.
+
+---
+
+### Step 2 — Open Terminal
+
+Terminal lets you type commands to your Mac. Don't worry — you'll only need to paste a few lines.
+
+Press `⌘ Space` (Command + Space), type **Terminal**, press **Enter**.
+
+A window with a blinking cursor will open. Keep it open for the next steps.
+
+---
+
+### Step 3 — Get the project files
+
+Paste this into Terminal and press **Enter**:
+
+```
+git clone https://github.com/cds-snc/cx_anythingllm_knowledgebase.git
+cd cx_anythingllm_knowledgebase
+```
+
+> **If a popup appears** asking to install developer tools — click **Install**, wait for it to finish (a few minutes), then paste the command again.
+
+---
+
+### Step 4 — Run setup
+
+Paste this into Terminal and press **Enter**:
+
+```
+bash scripts/install.sh
+```
+
+The script will ask you **two questions** — paste your credentials when prompted:
+
+1. **Azure OpenAI API key** → paste your key, press Enter
+2. **Azure endpoint URL** → paste the URL, press Enter
+
+The script then downloads everything and starts the assistant. This takes **2–5 minutes** the first time (it's downloading a ~2 GB container image).
+
+When you see **Setup complete!** you're done.
+
+---
+
+### Step 5 — Open the assistant
+
+Go to **http://localhost:3001** in your browser.
+
+- **Create an account** when prompted — this is saved only on your Mac, not sent anywhere
+- Select **CX Knowledge Base** from the workspace list
+- Type your question and press **Enter**
+
+---
+
+## Stopping and starting
+
+**When you're done for the day**, run in Terminal:
+```
+docker compose down
+```
+
+**To start it again** the next day:
+1. Make sure Docker Desktop is open (whale in menu bar)
+2. Run in Terminal (you need to `cd` to the project folder first):
+```
+cd cx_anythingllm_knowledgebase
+docker compose up -d
+```
+Then go to http://localhost:3001.
+
+---
+
+## Getting document updates
+
+When new documents have been added to the knowledge base:
+
 ```
 bash scripts/update.sh
 ```
 
+Run this from inside the `cx_anythingllm_knowledgebase` folder.
+
 ---
 
-## What's happening under the hood
+## Troubleshooting
 
-The assistant is [AnythingLLM](https://anythingllm.com) running locally in Docker. When you ask a question:
+**"Cannot connect to Docker daemon" or "Docker is not running"**  
+→ Open Docker Desktop from your Applications folder. Wait for the whale icon in the menu bar to stop animating, then try again.
 
-1. Your question is converted to a vector (a numerical fingerprint) by a small model running inside the container — no API call, no cost.
-2. That vector is compared against the pre-embedded document library using LanceDB, a file-based vector database stored in `./storage/`.
-3. The most relevant passages from the documents are retrieved and sent, along with your question, to **Azure OpenAI gpt-4o** (your org's CDS endpoint).
-4. gpt-4o synthesises an answer using only those passages. The workspace is in **Query mode**, which means it will say "I don't know" rather than guess if the answer isn't in the documents.
+**Popup asking to install developer tools (Xcode Command Line Tools)**  
+→ Click Install and let it finish. Then re-run the command that prompted it.
 
-Everything except the final LLM call runs locally. The document vectors never leave your machine.
+**The page at http://localhost:3001 won't load**  
+→ Wait 60 seconds and try again. The container takes time to start.  
+→ If it still doesn't work, run `docker compose up -d` and wait another minute.
+
+**"git: command not found"**  
+→ This shouldn't happen if you completed Step 3 above. If it does, run the `git clone` command again — the developer tools popup should appear.
+
+**You already ran setup before and need to redo it**  
+→ Just run `bash scripts/install.sh` again from inside the project folder.
 
 ---
 
 ## Technical reference
+
+<details>
+<summary>For developers — expand for technical details</summary>
+
+### How it works
+
+When you ask a question:
+
+1. Your question is converted to a vector (a numerical fingerprint) by a small model running inside the container — no API call, no cost.
+2. That vector is compared against the pre-embedded document library using LanceDB, stored in `./storage/`.
+3. The most relevant passages are retrieved and sent, along with your question, to **Azure OpenAI gpt-4o** (CDS org endpoint).
+4. gpt-4o answers using only those passages. The workspace is in **Query mode** — it will say "I don't know" rather than guess if the answer isn't in the documents.
+
+Everything except the final LLM call runs locally. Document vectors never leave your machine.
 
 ### Stack
 
@@ -77,9 +156,8 @@ Everything except the final LLM call runs locally. The document vectors never le
 |-----------|------------|
 | App | AnythingLLM v1.12+ (Docker) |
 | LLM | Azure OpenAI gpt-4o (CDS org endpoint) |
-| Embedder | Xenova/all-MiniLM-L6-v2 (native, in-container) |
+| Embedder | Xenova/all-MiniLM-L6-v2 (native, in-container, free) |
 | Vector DB | LanceDB (file-based, `./storage/lancedb/`) |
-| Transcription | Whisper (local) |
 | Database | SQLite (`./storage/anythingllm.db`) |
 
 ### Corpus
@@ -102,13 +180,13 @@ See `.env.example`. Critical vars:
 | `AZURE_OPENAI_MODEL_PREF` | Deployment name, default `gpt-4o` |
 | `EMBEDDING_ENGINE` | Set to `native` (free, in-container) |
 | `VECTOR_DB` | Set to `lancedb` |
-| `ANYWHERE_API_KEY` | AnythingLLM API key (auto-generated on first run) |
+| `ANYWHERE_API_KEY` | AnythingLLM API key (for script/API use) |
 
 ### Scripts
 
 | Script | Purpose |
 |--------|---------|
-| `scripts/install.sh` | Fresh install: pulls image, loads corpus snapshot, starts container |
+| `scripts/install.sh` | Fresh install: interactive setup, pulls image, loads corpus snapshot |
 | `scripts/update.sh` | Pull latest corpus snapshot from GitHub Releases and restart |
 | `scripts/pack-storage.sh <tag>` | Package current `storage/` as a release tarball |
 | `scripts/test.sh` | End-to-end test suite (14 checks) |
@@ -132,11 +210,11 @@ bash scripts/pack-storage.sh v$(date +%Y-%m-%d)
 
 ### API access
 
-The AnythingLLM REST API is available at `http://localhost:3001/api/v1/`. Authenticate with the `ANYWHERE_API_KEY` from your `.env`:
-
 ```bash
 curl -X POST http://localhost:3001/api/v1/workspace/cx-knowledge-base/chat \
   -H "Authorization: Bearer $ANYWHERE_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"message":"What native plants grow well in shade?","mode":"query"}'
 ```
+
+</details>
