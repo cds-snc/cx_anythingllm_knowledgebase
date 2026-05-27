@@ -162,12 +162,13 @@ Everything except the final LLM call runs locally. Document vectors never leave 
 
 ### Corpus
 
-21 documents in `documents/`:
-- 19 PDFs: native plant guides (shade, sun, seashore, rock garden, meadow, butterfly, wildlife, edible plants, etc.)
-- 1 DOCX: Backyard Biodiversity guide
-- 2 XLSX: Museum of Vancouver Indigenous plant guide, plant reference tables
+20 markdown documents in `docs/corpus-md/`:
+- 16 CRD infosheets (shade, sun, seashore, rock garden, meadow, butterfly, wildlife, edible plants, etc.) — OCR'd from PDF for clean text extraction
+- `nativeplantsguide.md` — comprehensive low-maintenance native planting guide
+- 3 additional topic guides (moist/wet sites, Garry Oak ecosystem, plant ground covers)
 
 All documents are embedded with 384-dimension vectors (all-MiniLM-L6-v2).
+Reranker: `NativeEmbeddingReranker` (ms-marco-MiniLM-L-6-v2), enabled via `vectorSearchMode: "rerank"`.
 
 ### Environment variables
 
