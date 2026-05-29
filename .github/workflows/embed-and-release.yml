@@ -106,12 +106,36 @@ jobs:
             sleep 5
           done
 
+      - name: Create API key
+        id: apikey
+        run: |
+          # AnythingLLM generates no API key on fresh start.
+          # Create one directly via Prisma (createdBy is nullable, no FK).
+          API_KEY=$(docker exec anythingllm node -e "
+            const { PrismaClient } = require('/app/server/node_modules/@prisma/client');
+            const crypto = require('crypto');
+            const p = new PrismaClient();
+            (async () => {
+              let key = await p.api_keys.findFirst();
+              if (!key) {
+                const secret = 'sk-' + crypto.randomBytes(16).toString('hex');
+                key = await p.api_keys.create({ data: { secret } });
+              }
+              console.log(key.secret);
+              await p.\$disconnect();
+            })();
+          ")
+          echo "::add-mask::$API_KEY"
+          echo "key=$API_KEY" >> "$GITHUB_OUTPUT"
+          echo "API key ready"
+
       - name: Configure workspace via API
         env:
           ANYTHING_LLM_URL: http://localhost:3001
+          API_KEY: ${{ steps.apikey.outputs.key }}
         run: |
           WORKSPACES=$(curl -s "${ANYTHING_LLM_URL}/api/v1/workspaces" \
-            -H "Authorization: Bearer ${{ secrets.ANYTHINGLLM_API_KEY }}" 2>/dev/null || echo '{"workspaces":[]}')
+            -H "Authorization: Bearer ${API_KEY}" 2>/dev/null || echo '{"workspaces":[]}')
 
           HAS_WORKSPACE=$(echo "$WORKSPACES" | python3 -c "
           import json, sys
@@ -124,7 +148,7 @@ jobs:
             echo "Creating Research workspace..."
             curl -s -X POST "${ANYTHING_LLM_URL}/api/v1/workspace/new" \
               -H "Content-Type: application/json" \
-              -H "Authorization: Bearer ${{ secrets.ANYTHINGLLM_API_KEY }}" \
+              -H "Authorization: Bearer ${API_KEY}" \
               -d '{"name": "Research", "chatMode": "query"}' || true
           else
             echo "Research workspace already exists"
@@ -133,6 +157,7 @@ jobs:
       - name: Upload markdown corpus
         env:
           ANYTHING_LLM_URL: http://localhost:3001
+          API_KEY: ${{ steps.apikey.outputs.key }}
         run: |
           # Upload converted markdown files (not raw source documents)
           WORKSPACE_SLUG="research"
@@ -146,7 +171,7 @@ jobs:
             echo "Uploading: $FILENAME"
 
             RESPONSE=$(curl -s -X POST "${ANYTHING_LLM_URL}/api/v1/document/upload" \
-              -H "Authorization: Bearer ${{ secrets.ANYTHINGLLM_API_KEY }}" \
+              -H "Authorization: Bearer ${API_KEY}" \
               -F "file=@$f" 2>/dev/null || echo '{"success":false}')
 
             SUCCESS=$(echo "$RESPONSE" | python3 -c "import json,sys; print(json.load(sys.stdin).get('success', False))" 2>/dev/null || echo "False")
@@ -164,7 +189,7 @@ jobs:
               if [ -n "$DOC_LOCATION" ]; then
                 curl -s -X POST "${ANYTHING_LLM_URL}/api/v1/workspace/${WORKSPACE_SLUG}/update-embeddings" \
                   -H "Content-Type: application/json" \
-                  -H "Authorization: Bearer ${{ secrets.ANYTHINGLLM_API_KEY }}" \
+                  -H "Authorization: Bearer ${API_KEY}" \
                   -d "{\"adds\": [\"$DOC_LOCATION\"], \"deletes\": []}" || true
               fi
             else
