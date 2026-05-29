@@ -84,6 +84,7 @@ jobs:
           EOF
 
           mkdir -p storage
+          chmod 777 storage
 
           # Pull and start AnythingLLM
           docker pull mintplexlabs/anythingllm:latest
