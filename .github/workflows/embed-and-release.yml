@@ -1,10 +1,14 @@
 name: Embed and Release
 
-# Runs weekly (Monday 8am ET) or manually
-# Embeds any new documents in documents/ and publishes a new storage snapshot
+# Runs weekly, on document changes, or manually.
+# Converts source documents to markdown, embeds them, and publishes a storage snapshot.
 on:
   schedule:
     - cron: '0 13 * * 1'   # Monday 8am ET (UTC-5 = 13:00 UTC)
+  push:
+    branches: [main]
+    paths:
+      - 'documents/**'
   workflow_dispatch:        # Manual trigger from Actions tab
     inputs:
       version_tag:
@@ -30,6 +34,29 @@ jobs:
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Version: $TAG"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install conversion dependencies
+        run: pip install -r requirements.txt
+
+      - name: Convert documents to markdown
+        run: python3 scripts/convert_documents.py
+
+      - name: Commit converted markdown
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/corpus-md/
+          if git diff --cached --quiet; then
+            echo "No new markdown files to commit"
+          else
+            git commit -m "corpus: auto-convert new documents to markdown"
+            git push
+          fi
 
       - name: Start AnythingLLM
         env:
@@ -83,21 +110,16 @@ jobs:
         env:
           ANYTHING_LLM_URL: http://localhost:3001
         run: |
-          # Use the AnythingLLM API to create/verify the Research workspace
-          # First, get the API key (set during onboarding or via env)
-          # For CI, we skip onboarding and use single-user mode with JWT auth
-          
-          # Check if workspace exists; create it if not
           WORKSPACES=$(curl -s "${ANYTHING_LLM_URL}/api/v1/workspaces" \
             -H "Authorization: Bearer ${{ secrets.ANYTHINGLLM_API_KEY }}" 2>/dev/null || echo '{"workspaces":[]}')
-          
+
           HAS_WORKSPACE=$(echo "$WORKSPACES" | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
           names = [w.get('name','') for w in data.get('workspaces', [])]
           print('yes' if 'Research' in names else 'no')
           " 2>/dev/null || echo "unknown")
-          
+
           if [ "$HAS_WORKSPACE" != "yes" ]; then
             echo "Creating Research workspace..."
             curl -s -X POST "${ANYTHING_LLM_URL}/api/v1/workspace/new" \
@@ -108,18 +130,17 @@ jobs:
             echo "Research workspace already exists"
           fi
 
-      - name: Upload documents via API
+      - name: Upload markdown corpus
         env:
           ANYTHING_LLM_URL: http://localhost:3001
         run: |
-          # Upload each file in documents/ to AnythingLLM
+          # Upload converted markdown files (not raw source documents)
           WORKSPACE_SLUG="research"
           UPLOADED=0
           FAILED=0
 
-          for f in documents/*; do
+          for f in docs/corpus-md/*.md; do
             [ -f "$f" ] || continue
-            [ "$(basename "$f")" = ".gitkeep" ] && continue
 
             FILENAME=$(basename "$f")
             echo "Uploading: $FILENAME"
@@ -127,20 +148,19 @@ jobs:
             RESPONSE=$(curl -s -X POST "${ANYTHING_LLM_URL}/api/v1/document/upload" \
               -H "Authorization: Bearer ${{ secrets.ANYTHINGLLM_API_KEY }}" \
               -F "file=@$f" 2>/dev/null || echo '{"success":false}')
-            
+
             SUCCESS=$(echo "$RESPONSE" | python3 -c "import json,sys; print(json.load(sys.stdin).get('success', False))" 2>/dev/null || echo "False")
-            
+
             if [ "$SUCCESS" = "True" ]; then
               UPLOADED=$((UPLOADED + 1))
-              
-              # Move to workspace to trigger embedding
+
               DOC_LOCATION=$(echo "$RESPONSE" | python3 -c "
           import json, sys
           data = json.load(sys.stdin)
           docs = data.get('documents', [])
           if docs: print(docs[0].get('location', ''))
           " 2>/dev/null || echo "")
-              
+
               if [ -n "$DOC_LOCATION" ]; then
                 curl -s -X POST "${ANYTHING_LLM_URL}/api/v1/workspace/${WORKSPACE_SLUG}/update-embeddings" \
                   -H "Content-Type: application/json" \
@@ -158,7 +178,6 @@ jobs:
 
       - name: Wait for embedding to complete
         run: |
-          # Give the embedder time to process
           echo "Waiting 30s for embedding to complete..."
           sleep 30
 
@@ -167,7 +186,6 @@ jobs:
           TAG="${{ steps.tag.outputs.tag }}"
           echo "$TAG" > storage/.release-tag
 
-          # Exclude logs and temp files
           tar -czf "storage-${TAG}.tar.gz" \
             --exclude="storage/logs" \
             --exclude="storage/*.log" \
@@ -183,7 +201,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${{ steps.tag.outputs.tag }}"
-          
+
           # Delete existing release with same tag if present
           gh release delete "$TAG" --yes 2>/dev/null || true
           git tag -d "$TAG" 2>/dev/null || true
