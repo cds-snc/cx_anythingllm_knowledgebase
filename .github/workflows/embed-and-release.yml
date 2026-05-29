@@ -155,17 +155,17 @@ jobs:
           import json, sys
           data = json.load(sys.stdin)
           names = [w.get('name','') for w in data.get('workspaces', [])]
-          print('yes' if 'Research' in names else 'no')
+          print('yes' if 'CX Knowledge Base' in names else 'no')
           " 2>/dev/null || echo "unknown")
 
           if [ "$HAS_WORKSPACE" != "yes" ]; then
-            echo "Creating Research workspace..."
+            echo "Creating CX Knowledge Base workspace..."
             curl -s -X POST "${ANYTHING_LLM_URL}/api/v1/workspace/new" \
               -H "Content-Type: application/json" \
               -H "Authorization: Bearer ${API_KEY}" \
-              -d '{"name": "Research", "chatMode": "query"}' || true
+              -d '{"name": "CX Knowledge Base", "chatMode": "query"}' || true
           else
-            echo "Research workspace already exists"
+            echo "CX Knowledge Base workspace already exists"
           fi
 
       - name: Upload markdown corpus
@@ -174,7 +174,7 @@ jobs:
           API_KEY: ${{ steps.apikey.outputs.key }}
         run: |
           # Upload converted markdown files (not raw source documents)
-          WORKSPACE_SLUG="research"
+          WORKSPACE_SLUG="cx-knowledge-base"
           UPLOADED=0
           FAILED=0
 

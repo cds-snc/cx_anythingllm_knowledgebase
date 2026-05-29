@@ -4,7 +4,33 @@ A local AI assistant pre-loaded with native plants documentation for British Col
 
 ---
 
-## What you'll need
+## Quick start with GitHub Codespaces (recommended)
+
+No installs needed. Runs entirely in your browser.
+
+**One-time setup (done by a team lead, once for the whole team):**
+- Go to the repo on GitHub > **Settings** > **Secrets and variables** > **Codespaces**
+- Add two secrets: `AZURE_OPENAI_KEY` and `AZURE_OPENAI_ENDPOINT` (ask your team lead for these values)
+
+**To launch:**
+1. Go to the repo on **github.com**
+2. Click the green **Code** button > **Codespaces** tab > **Create codespace on main**
+3. Wait 2-3 minutes — the knowledge base downloads and the app starts automatically
+4. A browser tab opens to the AnythingLLM UI when it's ready
+5. Create an account when prompted (stored in the Codespace, not sent anywhere)
+6. Select **CX Knowledge Base** from the workspace list and start asking questions
+
+The knowledge base updates automatically every time the Codespace starts. No manual steps needed.
+
+> **If the browser tab opens to a blank page**, wait 30-60 seconds and refresh. The app is still starting up.
+
+---
+
+## Local setup (alternative)
+
+If you prefer to run it on your Mac instead of Codespaces, follow the steps below.
+
+### What you'll need
 
 - A Mac (macOS 13 Ventura or later)
 - Your Azure OpenAI credentials — two values, ask your team lead:
@@ -189,6 +215,7 @@ See `.env.example`. Critical vars:
 |--------|---------|
 | `scripts/install.sh` | Fresh install: interactive setup, pulls image, loads corpus snapshot |
 | `scripts/update.sh` | Pull latest corpus snapshot from GitHub Releases and restart |
+| `scripts/convert_documents.py` | Convert PDF/DOCX/XLSX in `documents/` to markdown (run by CI) |
 | `scripts/pack-storage.sh <tag>` | Package current `storage/` as a release tarball |
 | `scripts/test.sh` | End-to-end test suite (14 checks) |
 
@@ -200,11 +227,18 @@ bash scripts/test.sh
 
 All 14 checks must pass before releasing. Tests cover: container health, API auth, workspace state, Azure LLM config, 3 live query validations, and anti-hallucination mode.
 
-### Releasing a new corpus version
+### Adding new documents
+
+Drop a PDF, DOCX, or XLSX file into `documents/` and push to `main`. GitHub Actions will automatically:
+1. Convert it to markdown (via `markitdown`)
+2. Embed the markdown into the RAG
+3. Publish a new release
+
+Everyone else gets the update automatically on their next Codespace start or `bash scripts/update.sh`.
+
+### Manual release
 
 ```bash
-# 1. Add documents to documents/, embed them in the UI
-# 2. Package and publish
 bash scripts/pack-storage.sh v$(date +%Y-%m-%d)
 # Run the gh release create command it outputs
 ```
