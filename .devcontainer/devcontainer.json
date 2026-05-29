@@ -2,7 +2,7 @@
   "name": "CX Knowledge Base",
   "image": "mcr.microsoft.com/devcontainers/universal:2",
   "postCreateCommand": "bash .devcontainer/setup.sh",
-  "postStartCommand": "docker compose up -d && timeout 120 bash -c 'until curl -sf http://localhost:3001/api/ping >/dev/null 2>&1; do sleep 2; done' && echo 'AnythingLLM is ready at port 3001'",
+  "postStartCommand": "bash .devcontainer/start.sh",
   "forwardPorts": [3001],
   "portsAttributes": {
     "3001": {
