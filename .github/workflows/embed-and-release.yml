@@ -96,15 +96,28 @@ jobs:
             -e STORAGE_DIR=/app/server/storage \
             mintplexlabs/anythingllm:latest
 
-          # Wait for startup
+          # Wait for startup (up to 3 minutes)
           echo "Waiting for AnythingLLM to start..."
-          for i in $(seq 1 30); do
+          STARTED=false
+          for i in $(seq 1 36); do
             if curl -sf http://localhost:3001/api/ping | grep -q '"online":true'; then
               echo "AnythingLLM is up"
+              STARTED=true
               break
+            fi
+            # Check if container crashed
+            if ! docker ps --filter name=anythingllm --format '{{.Status}}' | grep -q Up; then
+              echo "ERROR: Container crashed. Logs:"
+              docker logs anythingllm --tail 50
+              exit 1
             fi
             sleep 5
           done
+          if [ "$STARTED" != "true" ]; then
+            echo "ERROR: AnythingLLM did not become healthy. Logs:"
+            docker logs anythingllm --tail 50
+            exit 1
+          fi
 
       - name: Create API key
         id: apikey
