@@ -218,6 +218,7 @@ See `.env.example`. Critical vars:
 | `scripts/convert_documents.py` | Convert PDF/DOCX/XLSX in `documents/` to markdown (run by CI) |
 | `scripts/pack-storage.sh <tag>` | Package current `storage/` as a release tarball |
 | `scripts/test.sh` | End-to-end test suite (14 checks) |
+| `scripts/eval_rag.py` | RAG quality evaluation using openevals (correctness, groundedness, helpfulness) |
 
 ### Running tests
 
@@ -226,6 +227,22 @@ bash scripts/test.sh
 ```
 
 All 14 checks must pass before releasing. Tests cover: container health, API auth, workspace state, Azure LLM config, 3 live query validations, and anti-hallucination mode.
+
+### Evaluating RAG quality
+
+Assess the quality of the RAG system's answers using LLM-as-judge evaluations:
+
+```bash
+python3 scripts/eval_rag.py              # Full evaluation (5 test cases, 3 dimensions each)
+python3 scripts/eval_rag.py --dry-run    # Test connectivity only
+```
+
+The evaluator measures:
+- **Correctness** — does the answer match expected facts?
+- **Groundedness** — is the answer supported by retrieved context?
+- **Helpfulness** — is the response useful and complete?
+
+Uses OpenEvals (LangChain) with Azure OpenAI as the judge model. Requires `.env` to have `AZURE_OPENAI_KEY` and `AZURE_OPENAI_ENDPOINT` set.
 
 ### Adding new documents
 
