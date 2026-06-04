@@ -105,6 +105,77 @@ def convert_file(source: Path) -> str:
     return result.text_content
 
 
+def word_count(text: str) -> int:
+    """Count words in text."""
+    return len(text.split())
+
+
+def split_large_document(
+    md_path: Path, corpus_dir: Path, max_words: int = 2000
+) -> list[str]:
+    """Split a large markdown file into smaller topical files by H2 headings.
+
+    If the document has no H2 headings, it is not split.
+
+    Args:
+        md_path: Path to the markdown file to potentially split.
+        corpus_dir: Directory where split files will be written.
+        max_words: Word count threshold. Only split if document exceeds this.
+
+    Returns:
+        List of created filenames (empty list if not split).
+        If split, the original file is deleted and replaced with split files.
+    """
+    content = md_path.read_text()
+    total_words = word_count(content)
+
+    if total_words <= max_words:
+        return []
+
+    # Find all H2 headings
+    h2_pattern = r'^## (.+)$'
+    h2_matches = list(re.finditer(h2_pattern, content, re.MULTILINE))
+
+    if not h2_matches:
+        # No H2 headings found, cannot split
+        return []
+
+    # Split content by H2 boundaries
+    sections = []
+    for i, match in enumerate(h2_matches):
+        section_title = match.group(1)
+        section_start = match.start()
+        section_end = (
+            h2_matches[i + 1].start() if i + 1 < len(h2_matches) else len(content)
+        )
+        section_content = content[section_start:section_end].rstrip()
+        sections.append((section_title, section_content))
+
+    # Prepend any content before the first H2 to all sections (intro/preamble)
+    preamble_end = h2_matches[0].start()
+    preamble = content[:preamble_end].rstrip()
+
+    # Generate filenames and write split files
+    base_slug = md_path.stem
+    created_files = []
+
+    for section_title, section_content in sections:
+        # Slugify the section title
+        section_slug = slugify(section_title)
+        split_filename = f"{base_slug}-{section_slug}.md"
+        split_path = corpus_dir / split_filename
+
+        # Combine preamble + section content
+        split_content = preamble + "\n\n" + section_content
+        split_path.write_text(split_content + "\n")
+        created_files.append(split_filename)
+
+    # Delete the original monolithic file
+    md_path.unlink()
+
+    return created_files
+
+
 def main() -> int:
     CORPUS_DIR.mkdir(parents=True, exist_ok=True)
     manifest = load_manifest()
@@ -113,6 +184,7 @@ def main() -> int:
     skipped = []
     failed = []
     bootstrapped = []
+    split_docs = []
 
     # Collect all supported source files
     sources = sorted(
@@ -128,8 +200,10 @@ def main() -> int:
         # Check manifest
         if manifest_key in manifest:
             if manifest[manifest_key]["hash"] == current_hash:
-                md_path = CORPUS_DIR / manifest[manifest_key]["markdown"]
-                if md_path.exists():
+                # Handle both string (single file) and list (split files) formats
+                md_refs = manifest[manifest_key]["markdown"]
+                md_files = [md_refs] if isinstance(md_refs, str) else md_refs
+                if all((CORPUS_DIR / f).exists() for f in md_files):
                     skipped.append(source.name)
                     continue
             # Hash changed — re-convert below
@@ -152,10 +226,27 @@ def main() -> int:
         try:
             content = convert_file(source)
             md_path.write_text(content)
-            manifest[manifest_key] = {
-                "hash": current_hash,
-                "markdown": md_name,
-            }
+
+            # Check if document needs splitting
+            split_files = split_large_document(md_path, CORPUS_DIR, max_words=2000)
+
+            if split_files:
+                # Document was split; update manifest with split files
+                print(f"  Split into {len(split_files)} files:")
+                for split_file in split_files:
+                    print(f"    - {split_file}")
+                manifest[manifest_key] = {
+                    "hash": current_hash,
+                    "markdown": split_files,  # Array of filenames
+                }
+                split_docs.append((source.name, split_files))
+            else:
+                # Not split; standard single-file entry
+                manifest[manifest_key] = {
+                    "hash": current_hash,
+                    "markdown": md_name,
+                }
+
             converted.append(source.name)
         except Exception as e:
             print(f"  ERROR: {e}", file=sys.stderr)
@@ -170,6 +261,10 @@ def main() -> int:
         print("Converted:")
         for name in converted:
             print(f"  + {name}")
+    if split_docs:
+        print("Documents split:")
+        for source_name, split_files in split_docs:
+            print(f"  ✂ {source_name} → {len(split_files)} files")
     if bootstrapped:
         print("Bootstrapped (existing markdown preserved):")
         for name in bootstrapped:

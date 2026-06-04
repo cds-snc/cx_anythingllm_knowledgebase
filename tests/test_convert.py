@@ -296,3 +296,167 @@ class TestFuzzyMatching:
         manifest = cd.load_manifest()
         key = "native-plants-by-flower-berry-colour-and-for-seasonal-interest.docx"
         assert manifest[key]["markdown"] == "native-plants-by-flower-berry-colour-and-for-seasonal-intere.md"
+
+
+class TestAutoSplit:
+    def test_small_document_not_split(self, workspace):
+        """A document below max_words should NOT be split."""
+        _, docs_dir, corpus_dir = workspace
+        # Create a DOCX with H2 headings but under 2000 words
+        from docx import Document
+
+        doc = Document()
+        doc.add_heading("Main Guide", level=1)
+        doc.add_paragraph("Introduction paragraph. " * 50)  # ~150 words
+        doc.add_heading("Section 1", level=2)
+        doc.add_paragraph("Content for section 1. " * 30)  # ~90 words
+        doc.add_heading("Section 2", level=2)
+        doc.add_paragraph("Content for section 2. " * 30)  # ~90 words
+        doc.save(str(docs_dir / "small-guide.docx"))
+
+        cd.main()
+        # Should create a single file, not split
+        assert (corpus_dir / "small-guide.md").exists()
+        assert not (corpus_dir / "small-guide-Section_1.md").exists()
+
+        manifest = cd.load_manifest()
+        # Manifest should have string, not list
+        assert isinstance(manifest["small-guide.docx"]["markdown"], str)
+
+    def test_large_document_with_h2_gets_split(self, workspace):
+        """A document over max_words with H2 headings should be split."""
+        _, docs_dir, corpus_dir = workspace
+        from docx import Document
+
+        doc = Document()
+        doc.add_heading("Plant Guide", level=1)
+        doc.add_paragraph("Introduction. " * 400)  # ~400 words of intro
+
+        # Add multiple H2 sections
+        for i in range(1, 6):
+            doc.add_heading(f"Plant Group {i}", level=2)
+            doc.add_paragraph(f"Details about plant group {i}. " * 250)  # ~250 words each
+
+        doc.save(str(docs_dir / "guide.docx"))
+
+        cd.main()
+
+        # Should create split files
+        assert not (corpus_dir / "guide.md").exists()  # Original deleted
+        assert (corpus_dir / "guide-Plant_Group_1.md").exists()
+        assert (corpus_dir / "guide-Plant_Group_2.md").exists()
+        assert (corpus_dir / "guide-Plant_Group_5.md").exists()
+
+        manifest = cd.load_manifest()
+        # Manifest should have list of files
+        md_list = manifest["guide.docx"]["markdown"]
+        assert isinstance(md_list, list)
+        assert len(md_list) == 5
+        assert "guide-Plant_Group_1.md" in md_list
+
+    def test_split_preserves_preamble(self, workspace):
+        """Preamble before first H2 should appear in all split files."""
+        _, docs_dir, corpus_dir = workspace
+        from docx import Document
+
+        doc = Document()
+        doc.add_heading("Guide Title", level=1)
+        doc.add_paragraph("This is important preamble text that should appear in all sections.")
+
+        doc.add_heading("Section A", level=2)
+        doc.add_paragraph("Content A. " * 500)  # Larger to ensure > 2000 words
+
+        doc.add_heading("Section B", level=2)
+        doc.add_paragraph("Content B. " * 500)
+
+        doc.save(str(docs_dir / "preamble-test.docx"))
+
+        cd.main()
+
+        # List what was created
+        created_files = list(corpus_dir.glob("preamble-test-*.md"))
+
+        # Read both split files and verify preamble is in both
+        for md_file in created_files:
+            content = md_file.read_text()
+            assert "important preamble text" in content
+
+    def test_split_files_no_content_lost(self, workspace):
+        """Verify that splitting doesn't lose any content."""
+        _, docs_dir, corpus_dir = workspace
+        from docx import Document
+
+        doc = Document()
+        doc.add_heading("Original Guide", level=1)
+        doc.add_paragraph("Intro content. " * 300)
+
+        for i in range(1, 4):
+            doc.add_heading(f"Section {i}", level=2)
+            doc.add_paragraph(f"Unique content {i}. " * 250)
+
+        doc.save(str(docs_dir / "content-test.docx"))
+
+        cd.main()
+
+        # Combine all split files
+        all_content = ""
+        for i in range(1, 4):
+            md_file = corpus_dir / f"content-test-Section_{i}.md"
+            assert md_file.exists()
+            all_content += md_file.read_text()
+
+        # Check that unique markers are present
+        for i in range(1, 4):
+            assert f"Unique content {i}" in all_content
+
+    def test_document_without_h2_not_split(self, workspace):
+        """Large document without H2 headings should NOT be split."""
+        _, docs_dir, corpus_dir = workspace
+        from docx import Document
+
+        doc = Document()
+        doc.add_heading("Big Guide", level=1)
+        # Add lots of content without H2 structure
+        for _ in range(5):
+            doc.add_paragraph("Content paragraph. " * 350)
+
+        doc.save(str(docs_dir / "no-structure.docx"))
+
+        cd.main()
+
+        # Should create single file, not split
+        assert (corpus_dir / "no-structure.md").exists()
+        assert not any(
+            (corpus_dir / f).exists()
+            for f in corpus_dir.glob("no-structure-*.md")
+        )
+
+        manifest = cd.load_manifest()
+        assert isinstance(manifest["no-structure.docx"]["markdown"], str)
+
+    def test_manifest_tracks_split_files(self, workspace):
+        """Manifest should correctly track split files."""
+        _, docs_dir, corpus_dir = workspace
+        from docx import Document
+
+        doc = Document()
+        doc.add_heading("Test Guide", level=1)
+        doc.add_paragraph("Preamble. " * 300)
+
+        for section in ["Alpha", "Beta", "Gamma"]:
+            doc.add_heading(section, level=2)
+            doc.add_paragraph(f"Content for {section}. " * 300)
+
+        doc.save(str(docs_dir / "manifest-test.docx"))
+
+        cd.main()
+
+        manifest = cd.load_manifest()
+        assert "manifest-test.docx" in manifest
+        assert "hash" in manifest["manifest-test.docx"]
+
+        split_files = manifest["manifest-test.docx"]["markdown"]
+        assert isinstance(split_files, list)
+        assert len(split_files) == 3
+        assert all(f.endswith(".md") for f in split_files)
+        assert all((corpus_dir / f).exists() for f in split_files)
