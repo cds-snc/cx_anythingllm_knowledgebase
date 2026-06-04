@@ -8,21 +8,49 @@ A local AI assistant pre-loaded with native plants documentation for British Col
 
 No installs needed. Runs entirely in your browser.
 
-**One-time setup (done by a team lead, once for the whole team):**
-- Go to the repo on GitHub > **Settings** > **Secrets and variables** > **Codespaces**
-- Add two secrets: `AZURE_OPENAI_KEY` and `AZURE_OPENAI_ENDPOINT` (ask your team lead for these values)
+### First-time team setup (done once by a team lead)
 
-**To launch:**
-1. Go to the repo on **github.com**
-2. Click the green **Code** button > **Codespaces** tab > **Create codespace on main**
-3. Wait 2-3 minutes — the knowledge base downloads and the app starts automatically
-4. A browser tab opens to the AnythingLLM UI when it's ready
-5. Create an account when prompted (stored in the Codespace, not sent anywhere)
-6. Select **CX Knowledge Base** from the workspace list and start asking questions
+Before anyone on your team can use Codespaces, a team lead needs to add the Azure credentials:
 
-The knowledge base updates automatically every time the Codespace starts. No manual steps needed.
+1. Go to **https://github.com/cds-snc/cx_anythingllm_knowledgebase**
+2. Click **Settings** (top menu bar, far right)
+3. In the left sidebar, click **Secrets and variables** > **Codespaces**
+4. Click **New repository secret** and add these two secrets:
+   - **Name:** `AZURE_OPENAI_KEY` — **Value:** your Azure OpenAI API key (ask your team lead)
+   - **Name:** `AZURE_OPENAI_ENDPOINT` — **Value:** your Azure endpoint URL (e.g. `https://cds-platform-ai.openai.azure.com/`)
 
-> **If the browser tab opens to a blank page**, wait 30-60 seconds and refresh. The app is still starting up.
+This only needs to be done once. Everyone on the team shares these secrets automatically.
+
+### Opening the knowledge base
+
+1. Go to **https://github.com/cds-snc/cx_anythingllm_knowledgebase**
+2. Click the green **<> Code** button
+3. Click the **Codespaces** tab
+4. Click **Create codespace on main**
+5. Wait 2–3 minutes — you'll see a terminal with setup logs. When it says **"AnythingLLM is ready at port 3001"**, a browser tab opens automatically
+6. **Create an account** when prompted — this is stored only in your Codespace, not sent anywhere
+7. Select **CX Knowledge Base** from the workspace list
+8. Type your question and press **Enter**
+
+The knowledge base updates automatically every time your Codespace starts. No manual steps needed.
+
+### Returning to an existing Codespace
+
+If you've already created a Codespace and want to come back to it:
+
+1. Go to **https://github.com/codespaces**
+2. Find your Codespace in the list (it will say `cx_anythingllm_knowledgebase`)
+3. Click on it to reopen — the knowledge base starts automatically
+
+> **If the browser tab opens to a blank page**, wait 30–60 seconds and refresh. The app is still starting up.
+
+### Stopping your Codespace
+
+Codespaces automatically stop after 30 minutes of inactivity. To stop it manually:
+
+1. Go to **https://github.com/codespaces**
+2. Click the **...** menu next to your Codespace
+3. Click **Stop codespace**
 
 ---
 
@@ -188,10 +216,10 @@ Everything except the final LLM call runs locally. Document vectors never leave 
 
 ### Corpus
 
-20 markdown documents in `docs/corpus-md/`:
-- 16 CRD infosheets (shade, sun, seashore, rock garden, meadow, butterfly, wildlife, edible plants, etc.) — OCR'd from PDF for clean text extraction
-- `nativeplantsguide.md` — comprehensive low-maintenance native planting guide
-- 3 additional topic guides (moist/wet sites, Garry Oak ecosystem, plant ground covers)
+24 markdown documents in `docs/corpus-md/`:
+- 17 CRD infosheets (shade, sun, seashore, rock garden, meadow, butterfly, wildlife, edible plants, etc.) — OCR'd from PDF
+- 5 topical guides split from the native planting guide (benefits & wildlife, garden design, plant reference, planting & care, garden tips)
+- 2 additional guides (Backyard Biodiversity, Indigenous plant guide)
 
 All documents are embedded with 384-dimension vectors (all-MiniLM-L6-v2).
 Reranker: `NativeEmbeddingReranker` (ms-marco-MiniLM-L-6-v2), enabled via `vectorSearchMode: "rerank"`.
@@ -219,6 +247,7 @@ See `.env.example`. Critical vars:
 | `scripts/pack-storage.sh <tag>` | Package current `storage/` as a release tarball |
 | `scripts/test.sh` | End-to-end test suite (14 checks) |
 | `scripts/eval_rag.py` | RAG quality evaluation using openevals (correctness, groundedness, helpfulness) |
+| `scripts/eval_ab.py` | A/B comparison of LLM providers (Azure vs Groq) with latency tracking |
 
 ### Running tests
 
