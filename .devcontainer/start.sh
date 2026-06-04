@@ -37,6 +37,20 @@ else
   echo "[start] Knowledge base is current (${CURRENT_TAG:-none})"
 fi
 
+# ── Inject Azure credentials from Codespace secrets into .env ──────────────────
+# These may not have been set during setup.sh if the Codespace secrets
+# weren't available yet. Re-inject on every start to guarantee parity.
+if [ -f .env ]; then
+  if [ -n "${AZURE_OPENAI_KEY:-}" ]; then
+    sed -i "s|^AZURE_OPENAI_KEY=.*|AZURE_OPENAI_KEY=${AZURE_OPENAI_KEY}|" .env
+    echo "[start] Azure OpenAI key injected from environment"
+  fi
+  if [ -n "${AZURE_OPENAI_ENDPOINT:-}" ]; then
+    sed -i "s|^AZURE_OPENAI_ENDPOINT=.*|AZURE_OPENAI_ENDPOINT='${AZURE_OPENAI_ENDPOINT}'|" .env
+    echo "[start] Azure OpenAI endpoint injected from environment"
+  fi
+fi
+
 docker compose up -d
 timeout 120 bash -c 'until curl -sf http://localhost:3001/api/ping >/dev/null 2>&1; do sleep 2; done' \
   && echo "[start] AnythingLLM is ready at port 3001" \
