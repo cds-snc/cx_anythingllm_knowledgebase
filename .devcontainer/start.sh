@@ -40,4 +40,41 @@ fi
 docker compose up -d
 timeout 120 bash -c 'until curl -sf http://localhost:3001/api/ping >/dev/null 2>&1; do sleep 2; done' \
   && echo "[start] AnythingLLM is ready at port 3001" \
-  || echo "[start] WARNING: AnythingLLM did not become healthy in time"
+  || { echo "[start] WARNING: AnythingLLM did not become healthy in time"; exit 1; }
+
+# ── Enforce workspace config (parity with local) ──────────────────────────────
+# Extract or create API key from the running container
+API_KEY=$(docker exec anythingllm node -e "
+  const { PrismaClient } = require('/app/server/node_modules/@prisma/client');
+  const crypto = require('crypto');
+  const p = new PrismaClient();
+  (async () => {
+    let key = await p.api_keys.findFirst();
+    if (!key) {
+      const secret = 'sk-' + crypto.randomBytes(16).toString('hex');
+      key = await p.api_keys.create({ data: { secret } });
+    }
+    console.log(key.secret);
+    await p.\$disconnect();
+  })();
+" 2>/dev/null || true)
+
+if [ -n "${API_KEY:-}" ]; then
+  echo "[start] Enforcing workspace settings..."
+  curl -sf -X POST "http://localhost:3001/api/v1/workspace/cx-knowledge-base/update" \
+    -H "Authorization: Bearer ${API_KEY}" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "chatMode": "query",
+      "openAiTemp": 0,
+      "topN": 10,
+      "similarityThreshold": 0.25,
+      "vectorSearchMode": "rerank",
+      "openAiPrompt": "You are a knowledgeable assistant for BC native plant gardening. You ONLY answer questions using the context documents provided to you in each response. Do not use general knowledge, do not guess, and do not infer beyond what the documents explicitly state. Critically: if a document mentions a plant name but does not explicitly confirm the specific attribute being asked about (such as flower colour, height, or water requirements), do not describe that attribute — acknowledge the gap instead. If the documents do not contain enough information to answer the question, say so clearly. Never fabricate plant names, flower colours, statistics, percentages, dates, or rankings that are not stated in the documents.",
+      "queryRefusalResponse": "I was not able to find relevant information about this in the documents available to me. I can only answer questions based on the native plant guides in my knowledge base."
+    }' >/dev/null 2>&1 \
+    && echo "[start] Workspace configured: query mode, reranker on, temp 0" \
+    || echo "[start] WARNING: Could not enforce workspace settings — check manually in the UI"
+else
+  echo "[start] WARNING: Could not extract API key — workspace settings may need manual config"
+fi
