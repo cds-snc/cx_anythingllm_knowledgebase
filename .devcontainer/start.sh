@@ -40,14 +40,23 @@ fi
 # ── Inject Azure credentials from Codespace secrets into .env ──────────────────
 # These may not have been set during setup.sh if the Codespace secrets
 # weren't available yet. Re-inject on every start to guarantee parity.
+#
+# IMPORTANT: AnythingLLM expects AZURE_OPENAI_ENDPOINT as the BASE resource URL
+# only, e.g. https://myresource.openai.azure.com/
+# It constructs the full /openai/deployments/... path internally.
+# If someone pastes the full deployment URL from Azure Portal, strip it.
 if [ -f .env ]; then
   if [ -n "${AZURE_OPENAI_KEY:-}" ]; then
-    sed -i "s|^AZURE_OPENAI_KEY=.*|AZURE_OPENAI_KEY=${AZURE_OPENAI_KEY}|" .env
+    # Strip any surrounding quotes from the secret value
+    CLEAN_KEY=$(echo "$AZURE_OPENAI_KEY" | sed "s/^['\"]//;s/['\"]$//")
+    sed -i "s|^AZURE_OPENAI_KEY=.*|AZURE_OPENAI_KEY=${CLEAN_KEY}|" .env
     echo "[start] Azure OpenAI key injected from environment"
   fi
   if [ -n "${AZURE_OPENAI_ENDPOINT:-}" ]; then
-    sed -i "s|^AZURE_OPENAI_ENDPOINT=.*|AZURE_OPENAI_ENDPOINT='${AZURE_OPENAI_ENDPOINT}'|" .env
-    echo "[start] Azure OpenAI endpoint injected from environment"
+    # Strip quotes, then strip everything after .azure.com/ to get the base URL
+    CLEAN_ENDPOINT=$(echo "$AZURE_OPENAI_ENDPOINT" | sed "s/^['\"]//;s/['\"]$//" | sed 's|\(\.openai\.azure\.com\)/.*|\1/|')
+    sed -i "s|^AZURE_OPENAI_ENDPOINT=.*|AZURE_OPENAI_ENDPOINT='${CLEAN_ENDPOINT}'|" .env
+    echo "[start] Azure OpenAI endpoint set to: ${CLEAN_ENDPOINT}"
   fi
 fi
 

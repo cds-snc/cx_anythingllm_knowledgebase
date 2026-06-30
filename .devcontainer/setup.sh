@@ -14,15 +14,20 @@ sed -i "s|^SIG_SALT=.*|SIG_SALT='$(openssl rand -hex 32)'|"     .env
 sed -i "s|^JWT_SECRET=.*|JWT_SECRET='$(openssl rand -hex 32)'|"  .env
 
 # Inject Azure credentials from Codespaces secrets (if set)
+# IMPORTANT: AnythingLLM expects the BASE resource URL only,
+# e.g. https://myresource.openai.azure.com/
+# NOT the full deployment URL from Azure Portal.
 if [ -n "${AZURE_OPENAI_KEY:-}" ]; then
-  sed -i "s|^AZURE_OPENAI_KEY=.*|AZURE_OPENAI_KEY=${AZURE_OPENAI_KEY}|" .env
+  CLEAN_KEY=$(echo "$AZURE_OPENAI_KEY" | sed "s/^['\"]//;s/['\"]$//")
+  sed -i "s|^AZURE_OPENAI_KEY=.*|AZURE_OPENAI_KEY=${CLEAN_KEY}|" .env
   echo "[setup] Azure OpenAI key injected from Codespaces secrets"
 else
   echo "[setup] WARNING: AZURE_OPENAI_KEY not set — chat will not work until configured"
 fi
 if [ -n "${AZURE_OPENAI_ENDPOINT:-}" ]; then
-  sed -i "s|^AZURE_OPENAI_ENDPOINT=.*|AZURE_OPENAI_ENDPOINT='${AZURE_OPENAI_ENDPOINT}'|" .env
-  echo "[setup] Azure OpenAI endpoint injected from Codespaces secrets"
+  CLEAN_ENDPOINT=$(echo "$AZURE_OPENAI_ENDPOINT" | sed "s/^['\"]//;s/['\"]$//" | sed 's|\(\.openai\.azure\.com\)/.*|\1/|')
+  sed -i "s|^AZURE_OPENAI_ENDPOINT=.*|AZURE_OPENAI_ENDPOINT='${CLEAN_ENDPOINT}'|" .env
+  echo "[setup] Azure OpenAI endpoint set to: ${CLEAN_ENDPOINT}"
 fi
 
 echo "[setup] .env generated with fresh secrets"
